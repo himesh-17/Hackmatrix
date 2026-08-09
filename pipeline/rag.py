@@ -4,11 +4,10 @@ import time
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_core.documents import Document
 from langchain_chroma import Chroma
-from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from langchain_groq import ChatGroq
 from langchain_classic.chains import RetrievalQA
 from langchain_core.prompts import PromptTemplate
-from langchain_core.embeddings import Embeddings
+from langchain_huggingface import HuggingFaceEmbeddings
 
 CHROMA_DIR = "chroma_db"
 DATA_FILE = "data/osdr_documents.json"
@@ -42,25 +41,15 @@ def chunk_documents(docs: list[Document]) -> list[Document]:
 
 
 def build_vectorstore(chunks: list[Document]) -> Chroma:
-    embeddings = GoogleGenerativeAIEmbeddings(model="models/gemini-embedding-001")
+    embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
     # Check if vectorstore exists and has data
     if os.path.exists(CHROMA_DIR) and os.listdir(CHROMA_DIR):
         vs = Chroma(persist_directory=CHROMA_DIR, embedding_function=embeddings)
         if vs._collection.count() > 0:
             print(f"Loaded existing vectorstore ({vs._collection.count()} entries)")
             return vs
-    # Build new vectorstore in batches to avoid rate limits (free tier = 100/min)
-    BATCH = 50
-    vs = None
-    for i in range(0, len(chunks), BATCH):
-        batch = chunks[i : i + BATCH]
-        if vs is None:
-            vs = Chroma.from_documents(batch, embeddings, persist_directory=CHROMA_DIR)
-        else:
-            vs.add_documents(batch)
-        print(f"Embedded {min(i + BATCH, len(chunks))}/{len(chunks)} chunks")
-        if i + BATCH < len(chunks):
-            time.sleep(65)  # respect rate limit
+    # Build new vectorstore
+    vs = Chroma.from_documents(chunks, embeddings, persist_directory=CHROMA_DIR)
     print(f"Built new vectorstore ({vs._collection.count()} entries)")
     return vs
 
