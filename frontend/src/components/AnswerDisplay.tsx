@@ -142,7 +142,7 @@ function SuccessState({
       exit={{ opacity: 0 }}
       className="space-y-3.5 w-full text-left font-sans"
     >
-      {/* Clean Claude 3.5 Output Text (Compact text-[13.5px] leading-[1.65]) */}
+      {/* Clean Claude 3.5 Output Text */}
       <div className="text-[13.5px] text-white/85 leading-[1.65] space-y-3 font-sans text-left">
         {result.answer.split('\n\n').map((paragraph, index) => {
           if (paragraph.startsWith('## ') || paragraph.startsWith('### ')) {
