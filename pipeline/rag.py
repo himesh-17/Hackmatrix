@@ -38,22 +38,25 @@ Answer:""",
         input_variables=["context", "question"]
     ),
     "research": PromptTemplate(
-        template="""You are a space biology expert. Answer using ONLY the provided context.
-Do NOT add information not present in the context.
+        template="""You are a senior space biology researcher writing a detailed technical brief. Answer using ONLY the provided context. Be thorough, specific, and data-driven.
 
 RULES:
-- When context explicitly mentions a finding and an OSD-ID together, cite the OSD-ID
-- Do NOT invent study titles or descriptions for OSD-IDs
-- Include relevant details from context: organisms, missions, timeframes, methods
-- Cite each OSD-ID only once, at the end of the relevant claim
-- If the context doesn't contain enough info, say so
+1. STRUCTURE your answer with clear sections if the question has multiple aspects
+2. ALWAYS include specific numbers, percentages, durations, dates, sample sizes, and mission names when available in context
+3. ALWAYS cite OSD-IDs inline as [OSD-XXX] after each claim — do NOT list them at the end
+4. Mention specific organisms (species, strain), tissues, cell types, and genes when found in context
+5. Include experimental conditions: duration, gravity conditions, control groups, measurement methods
+6. If multiple studies address the question, compare and contrast their findings
+7. If context is insufficient for some parts, state exactly what is missing — do NOT say "not enough info" for the whole answer
+8. NEVER invent statistics, dates, or OSD-IDs not in the context
+9. Start with a 1-sentence summary, then provide the detailed breakdown
 
 Context:
 {context}
 
 Question: {question}
 
-Answer:""",
+Detailed Answer:""",
         input_variables=["context", "question"]
     ),
 }
@@ -92,7 +95,7 @@ def build_vectorstore(chunks: list[Document]) -> Chroma:
 
 def create_qa_chain(vectorstore: Chroma, mode: str = "research"):
     llm = ChatGroq(model="llama-3.1-8b-instant", temperature=0.1)
-    retriever = vectorstore.as_retriever(search_kwargs={"k": 15})
+    retriever = vectorstore.as_retriever(search_kwargs={"k": 20})
     prompt = PROMPTS.get(mode, PROMPTS["research"])
     chain = prompt | llm | StrOutputParser()
     return {"retriever": retriever, "chain": chain}
@@ -109,9 +112,9 @@ def format_history(history: list[dict]) -> str:
     if not history:
         return ""
     lines = []
-    for h in history[-6:]:
+    for h in history[-4:]:
         lines.append(f"Previous Q: {h.get('question', '')}")
-        lines.append(f"Previous A: {h.get('answer', '')[:150]}")
+        lines.append(f"Previous A: {h.get('answer', '')[:300]}")
     return "\n".join(lines) + "\n\n"
 
 
@@ -131,8 +134,8 @@ def ask(qa_chain, question: str, history: list[dict] = None) -> dict:
                 seen_ids.add(osd_id)
                 unique_docs.append(d)
 
-        # Truncate context to ~4000 chars — enough for diverse info, under TPM limit
-        context = "\n\n".join(d.page_content for d in unique_docs)[:4000]
+        # Truncate context to ~6000 chars — detailed answers need more data
+        context = "\n\n".join(d.page_content for d in unique_docs)[:6000]
 
         history_text = format_history(history or [])
         full_question = f"{history_text}Follow-up question: {question}" if history_text else question

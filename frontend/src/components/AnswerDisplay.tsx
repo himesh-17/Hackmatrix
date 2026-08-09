@@ -140,15 +140,45 @@ function SuccessState({
       {/* Clean Claude 3.5 Output Text */}
       <div className="text-[13.5px] text-white/85 leading-[1.65] space-y-3 font-sans text-left">
         {result.answer.split('\n\n').map((paragraph, index) => {
-          if (paragraph.startsWith('## ') || paragraph.startsWith('### ')) {
+          const trimmed = paragraph.trim();
+          // Markdown headers
+          if (trimmed.startsWith('## ') || trimmed.startsWith('### ')) {
             return (
               <h3 key={index} className="text-xs font-bold text-white tracking-widest uppercase pt-2 border-b border-[#f97316]/20 pb-1 font-mono text-left">
-                {paragraph.replace(/^#+\s*/, '')}
+                {trimmed.replace(/^#+\s*/, '')}
               </h3>
             );
           }
-          if (paragraph.startsWith('- ') || paragraph.startsWith('* ')) {
-            const items = paragraph.split('\n');
+          // Bold header paragraphs like "**Summary:** text..." or "**Experimental Conditions:**"
+          const boldMatch = trimmed.match(/^\*\*(.+?)\*\*\s*([\s\S]*)$/);
+          if (boldMatch) {
+            return (
+              <div key={index} className="space-y-1">
+                <h3 className="text-xs font-bold text-white tracking-widest uppercase pt-2 border-b border-[#f97316]/20 pb-1 font-mono text-left">
+                  {boldMatch[1].replace(/:$/, '')}
+                </h3>
+                {boldMatch[2] && (
+                  <p className="leading-[1.65] text-left text-[13.5px] text-white/85">{boldMatch[2]}</p>
+                )}
+              </div>
+            );
+          }
+          // Numbered list items
+          if (/^\d+\.\s/.test(trimmed)) {
+            const items = trimmed.split('\n').filter(Boolean);
+            return (
+              <ol key={index} className="space-y-1.5 pl-1 text-left list-decimal list-inside">
+                {items.map((item, i) => (
+                  <li key={i} className="text-white/85 text-[13.5px] leading-[1.65]">
+                    {item.replace(/^\d+\.\s*/, '')}
+                  </li>
+                ))}
+              </ol>
+            );
+          }
+          // Bullet lists
+          if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
+            const items = trimmed.split('\n');
             return (
               <ul key={index} className="space-y-1.5 pl-1 text-left">
                 {items.map((item, i) => (
@@ -162,11 +192,42 @@ function SuccessState({
           }
           return (
             <p key={index} className="leading-[1.65] text-left text-[13.5px] text-white/85">
-              {paragraph}
+              {trimmed}
             </p>
           );
         })}
       </div>
+
+      {/* Sources */}
+      {result.sources && result.sources.length > 0 && (
+        <div className="pt-2 border-t border-white/10">
+          <p className="text-[11px] font-mono text-white/40 uppercase tracking-wider mb-2">
+            Sources ({result.sources.length})
+          </p>
+          <div className="flex flex-wrap gap-1.5">
+            {result.sources.slice(0, 8).map((source, i) => (
+              <a
+                key={i}
+                href={source.url || `https://osdr.nasa.gov/osdr/datasets/${source.datasetId}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white/5 border border-white/10 text-[11px] text-white/60 hover:text-[#f97316] hover:border-[#f97316]/30 transition-colors font-mono"
+                title={source.title}
+              >
+                <span>{source.datasetId}</span>
+                {source.organism && (
+                  <span className="text-white/30">({source.organism})</span>
+                )}
+              </a>
+            ))}
+            {result.sources.length > 8 && (
+              <span className="text-[11px] text-white/30 font-mono self-center">
+                +{result.sources.length - 8} more
+              </span>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Claude Minimal Footer Copy Icon */}
       <div className="flex items-center gap-3 pt-2 text-[11px] font-mono text-white/35">
