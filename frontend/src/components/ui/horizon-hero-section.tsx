@@ -200,19 +200,21 @@ export const HorizonHeroSection = ({ onCompleteAction }) => {
   const totalSections = 2;
   
   const threeRefs = useRef({
-    scene: null,
-    camera: null,
-    renderer: null,
-    composer: null,
-    stars: [],
-    nebula: null,
-    mountains: [],
-    animationId: null,
-    targetCameraX: 0,
-    targetCameraY: 30,
-    targetCameraZ: 300,
-    locations: []
-  });
+  scene: null,
+  camera: null,
+  renderer: null,
+  composer: null,
+  stars: [],
+  nebula: null,
+  mountains: [],
+  moon: null,
+  moonGlow: null,
+  animationId: null,
+  targetCameraX: 0,
+  targetCameraY: 30,
+  targetCameraZ: 300,
+  locations: []
+});
 
   // Setup Intersection Observer to fix lag
   useEffect(() => {
@@ -280,7 +282,7 @@ export const HorizonHeroSection = ({ onCompleteAction }) => {
 
     const createStarField = () => {
       const { current: refs } = threeRefs;
-      const starCount = 5000;
+      const starCount = 2000;
       
       for (let i = 0; i < 3; i++) {
         const geometry = new THREE.BufferGeometry();
