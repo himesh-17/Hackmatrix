@@ -46,6 +46,7 @@ def ask_question(request: Request, body: dict):
 
     question = body.get("question", "").strip()
     mode = body.get("mode", "research").strip().lower()
+    history = body.get("history", [])
 
     if not question:
         raise HTTPException(400, "Question is required")
@@ -53,7 +54,8 @@ def ask_question(request: Request, body: dict):
         mode = "research"
 
     try:
-        return query_pipeline(question, mode)
+        chain = get_chain(mode)
+        return ask(chain, question, history)
     except Exception as e:
         raise HTTPException(500, f"Error processing question: {str(e)}")
 

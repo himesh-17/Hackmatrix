@@ -56,24 +56,24 @@ export default function ChatInterface({ onSearch }: ChatInterfaceProps) {
 
   return (
     <div className="flex flex-col h-full bg-black relative overflow-hidden font-sans">
-      {/* Background Hero Blackhole Ambient Warm Glow */}
+      {/* Background Subtle Warm Ambient Glow */}
       <div className="absolute inset-0 pointer-events-none z-0">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[550px] bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-orange-600/15 via-black to-transparent blur-3xl opacity-70" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[550px] bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-amber-600/10 via-black to-transparent blur-3xl opacity-60" />
       </div>
 
-      {/* Floating Top Header Toolbar with Orange Border Line */}
-      <div className="relative z-20 flex items-center justify-between px-6 py-3 border-b border-[#f97316]/50 bg-black/90 backdrop-blur-xl shadow-[0_4px_20px_rgba(0,0,0,0.9)]">
-        {/* Left: Interactive Dropdown Mode Selector with Orange Border */}
+      {/* Floating Top Header Toolbar */}
+      <div className="relative z-20 flex items-center justify-between px-6 py-3 border-b border-white/10 bg-black/90 backdrop-blur-xl">
+        {/* Left: Interactive Dropdown Mode Selector */}
         <div className="relative" ref={dropdownRef}>
           <button
             onClick={() => setDropdownOpen(!dropdownOpen)}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-[#f97316]/60 bg-black text-white text-xs font-mono font-semibold hover:border-[#f97316] hover:shadow-[0_0_15px_rgba(249,115,22,0.3)] transition-all cursor-pointer"
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-white/15 bg-white/5 text-white text-xs font-mono font-medium hover:bg-white/10 hover:border-amber-500/30 transition-all cursor-pointer"
           >
             <span>{mode === 'research' ? 'Research Mode 2.5' : 'Casual Mode'}</span>
-            <ChevronDown className={`w-3.5 h-3.5 text-[#f97316] transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} />
+            <ChevronDown className={`w-3.5 h-3.5 text-amber-400/80 transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} />
           </button>
 
-          {/* Mode Dropdown Menu with Orange Border */}
+          {/* Mode Dropdown Menu */}
           <AnimatePresence>
             {dropdownOpen && (
               <motion.div
@@ -81,19 +81,19 @@ export default function ChatInterface({ onSearch }: ChatInterfaceProps) {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -5 }}
                 transition={{ duration: 0.15 }}
-                className="absolute top-full left-0 mt-1.5 w-52 rounded-xl border border-[#f97316]/60 bg-black shadow-[0_0_30px_rgba(249,115,22,0.25)] p-1.5 z-50 backdrop-blur-2xl"
+                className="absolute top-full left-0 mt-1.5 w-52 rounded-xl border border-white/15 bg-black shadow-[0_0_30px_rgba(0,0,0,0.9)] p-1.5 z-50 backdrop-blur-2xl"
               >
                 <button
                   onClick={() => handleSelectMode('research')}
                   className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-mono transition-colors text-left ${
-                    mode === 'research' ? 'bg-[#f97316]/20 text-[#f97316] font-semibold' : 'text-white/80 hover:bg-white/5'
+                    mode === 'research' ? 'bg-amber-500/15 text-amber-400 font-semibold' : 'text-white/80 hover:bg-white/5'
                   }`}
                 >
                   <div className="flex items-center gap-2">
-                    <Flame className="w-3.5 h-3.5 text-[#f97316]" />
+                    <Flame className="w-3.5 h-3.5 text-amber-400" />
                     <span>Research Mode 2.5</span>
                   </div>
-                  {mode === 'research' && <Check className="w-3.5 h-3.5 text-[#f97316]" />}
+                  {mode === 'research' && <Check className="w-3.5 h-3.5 text-amber-400" />}
                 </button>
 
                 <button
@@ -127,15 +127,12 @@ export default function ChatInterface({ onSearch }: ChatInterfaceProps) {
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -15, transition: { duration: 0.2 } }}
-                className="flex flex-col items-center justify-center min-h-[50vh] text-center mt-12"
+                className="flex flex-col items-center justify-center min-h-[45vh] text-center mt-16"
               >
-                {/* Center Header */}
-                <h2 className="text-3xl sm:text-4xl font-bold font-mono text-white mb-2 tracking-tight">
+                {/* Center Header: Clean title only, no predefined query subtitle */}
+                <h2 className="text-3xl sm:text-4xl font-bold font-mono text-white tracking-tight">
                   How can I help you today?
                 </h2>
-                <p className="text-white/50 text-xs sm:text-sm font-mono">
-                  Ask me anything or choose from your research queries below
-                </p>
               </motion.div>
             ) : (
               <motion.div
@@ -148,16 +145,16 @@ export default function ChatInterface({ onSearch }: ChatInterfaceProps) {
                 {messages.map((msg) => (
                   <div key={msg.id} className="w-full space-y-4">
                     {msg.role === 'user' ? (
-                      /* User Message Bubble with Orange Border */
+                      /* User Message Bubble: Sleek Dark Glass, no heavy orange */
                       <div className="flex justify-end">
-                        <div className="max-w-[85%] bg-[#1a0f08] border border-[#f97316]/60 px-5 py-3.5 rounded-2xl rounded-tr-sm text-white text-[15px] leading-relaxed shadow-[0_0_20px_rgba(249,115,22,0.2)] font-sans">
+                        <div className="max-w-[85%] bg-white/[0.08] border border-white/15 px-5 py-3.5 rounded-2xl rounded-tr-sm text-white text-[15px] leading-relaxed shadow-lg font-sans">
                           {msg.content}
                         </div>
                       </div>
                     ) : (
-                      /* Assistant Response Block with Orange Border */
+                      /* Assistant Response Block */
                       <div className="flex justify-start w-full">
-                        <div className="max-w-[100%] w-full bg-black/95 rounded-2xl p-6 border border-[#f97316]/40 shadow-[0_0_40px_rgba(0,0,0,0.95)] backdrop-blur-xl relative">
+                        <div className="max-w-[100%] w-full bg-black/95 rounded-2xl p-6 border border-white/10 shadow-[0_0_30px_rgba(0,0,0,0.95)] backdrop-blur-xl relative">
                           <AnswerDisplay
                             status={msg.status}
                             result={msg.result || null}

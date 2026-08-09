@@ -6,8 +6,8 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_core.documents import Document
 from langchain_chroma import Chroma
 from langchain_groq import ChatGroq
-from langchain_classic.chains import RetrievalQA
 from langchain_core.prompts import PromptTemplate
+from langchain_core.output_parsers import StrOutputParser
 from langchain_huggingface import HuggingFaceEmbeddings
 
 CHROMA_DIR = "chroma_db"
@@ -15,9 +15,9 @@ DATA_FILE = "data/osdr_documents.json"
 
 # Organism detection patterns
 ORGANISM_PATTERNS = {
-    "human": r"\b(human|astronaut|inspiration4|twin study|patient|subject|lymphocyte|fibroblast)\b",
-    "mouse": r"\b(mouse|mice|murine|rodent|mus musculus)\b",
-    "rat": r"\b(rat|rattus)\b",
+    "human": r"\b(human|astronaut|inspiration4|twin study|patient|subject|lymphocyte|fibroblast|homo sapiens)\b",
+    "mouse": r"\b(mouse|mice|murine|mus musculus|c57bl|balb|rodent)\b",
+    "rat": r"\b(rat|rattus|sprague.dawley)\b",
     "plant": r"\b(arabidopsis|plant|seedling|thaliana)\b",
     "drosophila": r"\b(drosophila|fruit fly)\b",
     "c elegans": r"\b(c\. elegans|caenorhabditis|nematode)\b",
@@ -60,7 +60,6 @@ Answer:""",
 
 
 def detect_organism(question: str) -> str | None:
-    """Detect which organism the question is about."""
     q_lower = question.lower()
     for org, pattern in ORGANISM_PATTERNS.items():
         if re.search(pattern, q_lower):
@@ -95,10 +94,8 @@ def create_qa_chain(vectorstore: Chroma, mode: str = "research"):
     llm = ChatGroq(model="llama-3.1-8b-instant", temperature=0.1)
     retriever = vectorstore.as_retriever(search_kwargs={"k": 25})
     prompt = PROMPTS.get(mode, PROMPTS["research"])
-    return RetrievalQA.from_chain_type(
-        llm=llm, retriever=retriever, return_source_documents=True,
-        chain_type_kwargs={"prompt": prompt}
-    )
+    chain = prompt | llm | StrOutputParser()
+    return {"retriever": retriever, "chain": chain}
 
 
 def setup_pipeline():
@@ -108,10 +105,28 @@ def setup_pipeline():
     return create_qa_chain(vs)
 
 
-def ask(qa_chain, question: str) -> dict:
+def format_history(history: list[dict]) -> str:
+    if not history:
+        return ""
+    lines = []
+    for h in history[-6:]:
+        lines.append(f"Previous Q: {h.get('question', '')}")
+        lines.append(f"Previous A: {h.get('answer', '')[:150]}")
+    return "\n".join(lines) + "\n\n"
+
+
+def ask(qa_chain, question: str, history: list[dict] = None) -> dict:
     try:
-        result = qa_chain.invoke(question)
-        answer = result["result"]
+        retriever = qa_chain["retriever"]
+        chain = qa_chain["chain"]
+
+        docs = retriever.invoke(question)
+        context = "\n\n".join(d.page_content for d in docs)
+
+        history_text = format_history(history or [])
+        full_question = f"{history_text}Follow-up question: {question}" if history_text else question
+
+        answer = chain.invoke({"context": context, "question": full_question})
     except Exception as e:
         return {
             "answer": f"Error generating answer: {str(e)}",
@@ -120,24 +135,13 @@ def ask(qa_chain, question: str) -> dict:
             "organism_detected": None
         }
 
-    # Deduplicate sources by OSD-ID, keep diverse organisms
     seen = set()
     sources = []
-    for d in result.get("source_documents", []):
+    for d in docs:
         osd_id = d.metadata.get("osd_id")
         if osd_id and osd_id not in seen:
             seen.add(osd_id)
-            text = d.page_content.lower()
-            # Detect organism from chunk
-            org = "unknown"
-            if any(w in text for w in ["human", "homo sapiens", "astronaut", "inspiration4"]):
-                org = "human"
-            elif any(w in text for w in ["mouse", "mice", "murine", "mus musculus"]):
-                org = "mouse"
-            elif any(w in text for w in ["rat", "rattus"]):
-                org = "rat"
-            elif any(w in text for w in ["arabidopsis", "plant"]):
-                org = "plant"
+            org = detect_organism(d.page_content) or "unknown"
             sources.append({
                 "osd_id": osd_id,
                 "url": d.metadata.get("url"),
@@ -145,10 +149,8 @@ def ask(qa_chain, question: str) -> dict:
                 "organism": org
             })
 
-    # Detect organism from question
     organism = detect_organism(question)
 
-    # Simple confidence based on source count
     if len(sources) >= 3:
         confidence = "high"
     elif len(sources) >= 1:
