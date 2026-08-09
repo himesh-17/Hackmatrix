@@ -86,7 +86,7 @@ def reset_chains() -> None:
 # Pipeline query functions
 # ---------------------------------------------------------------------------
 
-def query_pipeline(question: str, mode: str) -> dict:
+def query_pipeline(question: str, mode: str, history: list = None) -> dict:
     """
     Run a question through the RAG pipeline and return the raw result.
 
@@ -94,7 +94,9 @@ def query_pipeline(question: str, mode: str) -> dict:
     answer, sources, confidence, organism_detected
     """
     chain = get_chain(mode)
-    return ask(chain, question)
+    # Convert Pydantic HistoryMessage objects to dicts for rag.py
+    history_dicts = [h.model_dump() if hasattr(h, "model_dump") else h for h in (history or [])]
+    return ask(chain, question, history_dicts)
 
 
 def refresh_data() -> dict:
@@ -212,13 +214,13 @@ def _build_tool_executions(question: str, sources_count: int, mode: str) -> list
     ]
 
 
-def build_research_response(question: str, mode: str) -> ResearchResponse:
+def build_research_response(question: str, mode: str, history: list = None) -> ResearchResponse:
     """
     Full end-to-end: run pipeline + transform into frontend-compatible response.
 
     This is the main entry point called by both /api/research and /api/casual.
     """
-    pipeline_result = query_pipeline(question, mode)
+    pipeline_result = query_pipeline(question, mode, history)
 
     answer = pipeline_result.get("answer", "")
     raw_sources = pipeline_result.get("sources", [])

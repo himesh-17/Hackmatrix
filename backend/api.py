@@ -32,8 +32,10 @@ app.add_middleware(
 
 @app.get("/health")
 def health():
-    """Server health check."""
-    return {"status": "ok", "datasets": 630}
+    """Server health check with dynamic vectorstore count."""
+    from backend.service import _vectorstore
+    chunks = _vectorstore._collection.count() if _vectorstore else 0
+    return {"status": "ok", "datasets": 630, "vectorstore_chunks": chunks}
 
 
 @app.post("/ask")
@@ -54,8 +56,7 @@ def ask_question(request: Request, body: dict):
         mode = "research"
 
     try:
-        chain = get_chain(mode)
-        return ask(chain, question, history)
+        return query_pipeline(question, mode, history)
     except Exception as e:
         raise HTTPException(500, f"Error processing question: {str(e)}")
 
@@ -78,7 +79,7 @@ def research_question(request: Request, body: ResearchRequest):
         raise HTTPException(400, "Question is required")
 
     try:
-        return build_research_response(question, "research")
+        return build_research_response(question, "research", body.history)
     except Exception as e:
         raise HTTPException(500, detail=f"Error processing research question: {str(e)}")
 
@@ -100,7 +101,7 @@ def casual_question(request: Request, body: CasualRequest):
         raise HTTPException(400, "Question is required")
 
     try:
-        return build_research_response(question, "casual")
+        return build_research_response(question, "casual", body.history)
     except Exception as e:
         raise HTTPException(500, detail=f"Error processing casual question: {str(e)}")
 
