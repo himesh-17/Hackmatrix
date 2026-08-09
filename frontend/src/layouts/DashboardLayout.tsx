@@ -12,15 +12,15 @@ interface DashboardLayoutProps {
 
 export default function DashboardLayout({ children, currentView, onViewChange, onNewSession, chatHistory }: DashboardLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false); // For mobile drawer
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   if (currentView === 'chat') {
     return (
-      <div className="flex h-screen bg-[#18181b] overflow-hidden text-[#fafafa] font-sans w-full">
+      <div className="flex h-screen bg-black overflow-hidden text-[#fafafa] font-sans w-full relative">
         {/* Mobile Sidebar Backdrop */}
         {mobileMenuOpen && (
           <div 
-            className="fixed inset-0 bg-black/50 z-40 md:hidden"
+            className="fixed inset-0 bg-black/80 z-40 md:hidden backdrop-blur-sm"
             onClick={() => setMobileMenuOpen(false)}
           />
         )}
@@ -41,14 +41,14 @@ export default function DashboardLayout({ children, currentView, onViewChange, o
         </div>
 
         {/* Main Content */}
-        <main className="flex-1 relative overflow-hidden flex flex-col bg-[#18181b] h-full w-full max-w-full">
+        <main className="flex-1 relative overflow-hidden flex flex-col bg-black h-full w-full max-w-full">
            {/* Mobile Header (Only visible on small screens when in chat) */}
-           <div className="md:hidden flex items-center justify-between p-3 border-b border-[#27272a] bg-[#18181b]">
-             <button onClick={() => setMobileMenuOpen(true)} className="p-2 rounded-md hover:bg-[#27272a] text-[#a1a1aa]">
+           <div className="md:hidden flex items-center justify-between p-3 border-b border-white/10 bg-black/90 backdrop-blur-md">
+             <button onClick={() => setMobileMenuOpen(true)} className="p-2 rounded-md hover:bg-white/10 text-[#a1a1aa]">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
              </button>
-             <span className="font-semibold text-sm">SpaceBio</span>
-             <div className="w-8" /> {/* Spacer */}
+             <span className="font-semibold text-sm tracking-wider">SPACEBIO</span>
+             <div className="w-8" />
            </div>
           {children}
         </main>
@@ -56,7 +56,7 @@ export default function DashboardLayout({ children, currentView, onViewChange, o
     );
   }
 
-  // Landing Page Layout (No wrapping UI, just pass through)
+  // Landing Page Layout (No wrapping UI)
   return (
     <div className="relative min-h-screen bg-black">
       {children}

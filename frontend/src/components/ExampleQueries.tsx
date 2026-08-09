@@ -36,9 +36,9 @@ export default function ExampleQueries({ onSelect, disabled = false }: ExampleQu
       className="w-full"
     >
       <div className="flex items-center gap-3 mb-5">
-        <div className="w-1 h-4 rounded-full bg-accent-indigo/60" />
-        <h2 className="text-xs tracking-[0.2em] text-text-muted uppercase font-medium">
-          Explore Research
+        <div className="w-1 h-4 rounded-full bg-orange-500" />
+        <h2 className="text-xs tracking-[0.2em] text-white/60 uppercase font-semibold">
+          Explore Space Biology Research
         </h2>
       </div>
 
@@ -55,34 +55,34 @@ export default function ExampleQueries({ onSelect, disabled = false }: ExampleQu
               onClick={() => !disabled && onSelect(item.question)}
               disabled={disabled}
               className={`
-                group relative text-left p-4 rounded-xl border border-space-border/40 bg-space-surface/30
-                backdrop-blur-sm transition-all duration-300 overflow-hidden
+                group relative text-left p-4 rounded-xl border border-white/10 bg-black/80
+                backdrop-blur-md transition-all duration-300 overflow-hidden shadow-md
                 ${disabled
                   ? 'opacity-50 cursor-not-allowed'
-                  : 'hover:border-accent-blue/30 hover:bg-space-surface/50 cursor-pointer'
+                  : 'hover:border-orange-500/40 hover:bg-white/[0.04] cursor-pointer'
                 }
               `}
               aria-label={`Ask: ${item.question}`}
             >
               <div
-                className="absolute inset-0 bg-gradient-to-br from-accent-blue/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                className="absolute inset-0 bg-gradient-to-br from-orange-500/10 via-amber-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"
                 aria-hidden="true"
               />
 
               <div className="relative flex flex-col gap-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-accent-blue/10 border border-accent-blue/20">
-                      <Icon className="w-3.5 h-3.5 text-accent-blue" />
+                    <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-orange-500/10 border border-orange-500/30">
+                      <Icon className="w-3.5 h-3.5 text-orange-400" />
                     </div>
-                    <span className="text-[10px] tracking-[0.15em] text-text-muted uppercase font-medium">
+                    <span className="text-[10px] tracking-[0.15em] text-amber-300/80 uppercase font-semibold font-mono">
                       {item.category}
                     </span>
                   </div>
-                  <ArrowRight className="w-3.5 h-3.5 text-text-muted/30 group-hover:text-accent-blue/60 group-hover:translate-x-0.5 transition-all duration-200" />
+                  <ArrowRight className="w-3.5 h-3.5 text-white/30 group-hover:text-orange-400 group-hover:translate-x-0.5 transition-all duration-200" />
                 </div>
 
-                <p className="text-sm text-text-secondary group-hover:text-text-primary transition-colors duration-200 leading-relaxed">
+                <p className="text-xs text-white/80 group-hover:text-white transition-colors duration-200 leading-relaxed font-medium">
                   {item.question}
                 </p>
               </div>
