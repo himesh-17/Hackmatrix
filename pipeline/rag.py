@@ -92,7 +92,7 @@ def build_vectorstore(chunks: list[Document]) -> Chroma:
 
 def create_qa_chain(vectorstore: Chroma, mode: str = "research"):
     llm = ChatGroq(model="llama-3.1-8b-instant", temperature=0.1)
-    retriever = vectorstore.as_retriever(search_kwargs={"k": 12})
+    retriever = vectorstore.as_retriever(search_kwargs={"k": 15})
     prompt = PROMPTS.get(mode, PROMPTS["research"])
     chain = prompt | llm | StrOutputParser()
     return {"retriever": retriever, "chain": chain}
@@ -122,7 +122,7 @@ def ask(qa_chain, question: str, history: list[dict] = None) -> dict:
 
         docs = retriever.invoke(question)
 
-        # Deduplicate by OSD-ID — keep only first chunk per dataset
+        # Deduplicate by OSD-ID but keep first chunk per dataset
         seen_ids = set()
         unique_docs = []
         for d in docs:
@@ -131,8 +131,8 @@ def ask(qa_chain, question: str, history: list[dict] = None) -> dict:
                 seen_ids.add(osd_id)
                 unique_docs.append(d)
 
-        # Truncate context to ~3000 chars to stay within Groq TPM limit
-        context = "\n\n".join(d.page_content for d in unique_docs)[:3000]
+        # Truncate context to ~4000 chars — enough for diverse info, under TPM limit
+        context = "\n\n".join(d.page_content for d in unique_docs)[:4000]
 
         history_text = format_history(history or [])
         full_question = f"{history_text}Follow-up question: {question}" if history_text else question
