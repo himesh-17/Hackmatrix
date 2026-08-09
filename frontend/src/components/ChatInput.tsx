@@ -45,8 +45,8 @@ export default function ChatInput({
       transition={{ duration: 0.4 }}
       className="w-full"
     >
-      {/* Rectangular Box with Thin Orange Border Outline matching Mockup */}
-      <div className="relative rounded-xl border border-[#f97316]/60 bg-black/95 p-4 shadow-[0_0_30px_rgba(0,0,0,0.9)] transition-all duration-300 group focus-within:border-[#f97316] focus-within:shadow-[0_0_20px_rgba(249,115,22,0.3)]">
+      {/* Rectangular Box with Clear Orange Border Line matching Mockup */}
+      <div className="relative rounded-xl border border-[#f97316]/70 bg-black p-4 shadow-[0_0_25px_rgba(249,115,22,0.2)] transition-all duration-300 group focus-within:border-[#f97316] focus-within:shadow-[0_0_25px_rgba(249,115,22,0.4)]">
         <textarea
           ref={textareaRef}
           value={query}
@@ -71,7 +71,7 @@ export default function ChatInput({
               {isResearch ? (
                 <>
                   <Flame className="w-3.5 h-3.5 text-[#f97316]" />
-                  <span className="text-[#f97316]/90 font-medium">Research Mode</span>
+                  <span className="text-[#f97316] font-semibold">Research Mode</span>
                 </>
               ) : (
                 <>

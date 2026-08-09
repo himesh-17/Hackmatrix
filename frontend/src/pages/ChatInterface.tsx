@@ -1,12 +1,10 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ChatInput from '@/components/ChatInput';
 import AnswerDisplay from '@/components/AnswerDisplay';
-import ExampleQueries from '@/components/ExampleQueries';
-import SearchModeToggle from '@/components/SearchModeToggle';
 import { useResearchQuery } from '@/hooks/useResearchQuery';
-import { useSearchMode } from '@/context/SearchModeContext';
-import { ChevronDown, Orbit } from 'lucide-react';
+import { useSearchMode, type SearchMode } from '@/context/SearchModeContext';
+import { ChevronDown, Check, Flame, MessageSquare } from 'lucide-react';
 
 interface ChatInterfaceProps {
   onSearch?: (query: string) => void;
@@ -14,11 +12,25 @@ interface ChatInterfaceProps {
 
 export default function ChatInterface({ onSearch }: ChatInterfaceProps) {
   const { query, setQuery, status, result, messages, submitQuery } = useResearchQuery();
-  const { mode } = useSearchMode();
+  const { mode, setMode } = useSearchMode();
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+
   const bottomRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const hasInteracted = messages.length > 0;
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // Smooth scroll without jitter
   useEffect(() => {
@@ -29,18 +41,17 @@ export default function ChatInterface({ onSearch }: ChatInterfaceProps) {
     }
   }, [messages.length, status, result, hasInteracted]);
 
-  const handleExampleSelect = (question: string) => {
-    setQuery(question);
-    submitQuery(question, mode);
-    if (onSearch) onSearch(question);
-  };
-
   const handleSubmit = (overrideQuery?: string) => {
     const textToSubmit = overrideQuery ?? query;
     if (!textToSubmit.trim()) return;
 
     if (onSearch) onSearch(textToSubmit.trim());
     submitQuery(textToSubmit.trim(), mode);
+  };
+
+  const handleSelectMode = (newMode: SearchMode) => {
+    setMode(newMode);
+    setDropdownOpen(false);
   };
 
   return (
@@ -50,23 +61,63 @@ export default function ChatInterface({ onSearch }: ChatInterfaceProps) {
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[550px] bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-orange-600/15 via-black to-transparent blur-3xl opacity-70" />
       </div>
 
-      {/* Floating Top Header Toolbar (Matching Mockup) */}
+      {/* Floating Top Header Toolbar */}
       <div className="relative z-20 flex items-center justify-between px-6 py-3 border-b border-white/10 bg-black/90 backdrop-blur-xl">
-        {/* Left: Model Selector Dropdown (matching `ChatGPT 5.1 ∨`) */}
-        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-white/10 bg-white/5 text-white text-xs font-mono font-medium hover:bg-white/10 transition-colors cursor-pointer">
-          <span>SpaceBio 2.5</span>
-          <ChevronDown className="w-3.5 h-3.5 text-white/60" />
+        {/* Left: Interactive Dropdown Mode Selector (Research Mode / Casual Mode) */}
+        <div className="relative" ref={dropdownRef}>
+          <button
+            onClick={() => setDropdownOpen(!dropdownOpen)}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-white/15 bg-white/5 text-white text-xs font-mono font-semibold hover:bg-white/10 transition-all cursor-pointer"
+          >
+            <span>{mode === 'research' ? 'Research Mode 2.5' : 'Casual Mode'}</span>
+            <ChevronDown className={`w-3.5 h-3.5 text-white/60 transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} />
+          </button>
+
+          {/* Mode Dropdown Menu */}
+          <AnimatePresence>
+            {dropdownOpen && (
+              <motion.div
+                initial={{ opacity: 0, y: -5 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -5 }}
+                transition={{ duration: 0.15 }}
+                className="absolute top-full left-0 mt-1.5 w-52 rounded-xl border border-white/15 bg-black/95 shadow-[0_0_30px_rgba(0,0,0,0.9)] p-1.5 z-50 backdrop-blur-2xl"
+              >
+                <button
+                  onClick={() => handleSelectMode('research')}
+                  className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-mono transition-colors text-left ${
+                    mode === 'research' ? 'bg-[#f97316]/20 text-[#f97316] font-semibold' : 'text-white/80 hover:bg-white/5'
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <Flame className="w-3.5 h-3.5 text-[#f97316]" />
+                    <span>Research Mode 2.5</span>
+                  </div>
+                  {mode === 'research' && <Check className="w-3.5 h-3.5 text-[#f97316]" />}
+                </button>
+
+                <button
+                  onClick={() => handleSelectMode('casual')}
+                  className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-mono transition-colors text-left ${
+                    mode === 'casual' ? 'bg-white/15 text-white font-semibold' : 'text-white/80 hover:bg-white/5'
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <MessageSquare className="w-3.5 h-3.5 text-white/70" />
+                    <span>Casual Mode</span>
+                  </div>
+                  {mode === 'casual' && <Check className="w-3.5 h-3.5 text-white" />}
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
-        {/* Center: Brand Logo Emblem (matching `[v0]` in mockup) */}
-        <div className="w-8 h-8 rounded-lg border border-orange-500/40 bg-black/80 flex items-center justify-center shadow-[0_0_15px_rgba(249,115,22,0.3)]">
-          <Orbit className="w-4 h-4 text-[#f97316]" />
-        </div>
+        {/* Center: Symbol Removed per user request ("beech wala symbol hatana hai") */}
+        <div />
 
-        {/* Right: ONLY Search Mode Toggle Pill in Top Right Corner */}
-        <div className="flex items-center">
-          <SearchModeToggle />
-        </div>
+        {/* Right: Toggle Pill Removed from top right ("right top se hatana na wahi cheez") */}
+        <div />
       </div>
 
       {/* Main Chat Stream Container */}
@@ -79,19 +130,15 @@ export default function ChatInterface({ onSearch }: ChatInterfaceProps) {
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -15, transition: { duration: 0.2 } }}
-                className="flex flex-col items-center justify-center min-h-[50vh] text-center mt-4"
+                className="flex flex-col items-center justify-center min-h-[50vh] text-center mt-12"
               >
                 {/* Center Header (Matching exact screenshot: "How can I help you today?") */}
                 <h2 className="text-3xl sm:text-4xl font-bold font-mono text-white mb-2 tracking-tight">
                   How can I help you today?
                 </h2>
-                <p className="text-white/50 text-xs sm:text-sm font-mono mb-10">
-                  Ask me anything or choose from the suggestions below
+                <p className="text-white/50 text-xs sm:text-sm font-mono">
+                  Ask me anything or choose from your research queries below
                 </p>
-
-                <div className="w-full max-w-2xl text-left">
-                  <ExampleQueries onSelect={handleExampleSelect} />
-                </div>
               </motion.div>
             ) : (
               <motion.div

@@ -21,7 +21,7 @@ export default function Sidebar({ isOpen, onToggle, onNavigateHome, onNewSession
           transition={{ duration: 0.3, ease: [0.76, 0, 0.24, 1] }}
           className="flex-shrink-0 h-full bg-black border-r border-white/10 overflow-hidden flex flex-col backdrop-blur-xl relative z-30 font-sans"
         >
-          {/* Header Controls: Chevron Left on Top Left (matching mockup) */}
+          {/* Header Controls: Chevron Left on Top Left */}
           <div className="p-3.5 flex items-center justify-between border-b border-white/10">
             <button
               onClick={onToggle}
@@ -41,7 +41,7 @@ export default function Sidebar({ isOpen, onToggle, onNavigateHome, onNewSession
             </button>
           </div>
 
-          {/* Clean New Session Bar (No + Icon) */}
+          {/* Clean New Session Bar */}
           <div className="p-3">
             <button 
               onClick={onNewSession}
@@ -52,7 +52,7 @@ export default function Sidebar({ isOpen, onToggle, onNavigateHome, onNewSession
             </button>
           </div>
 
-          {/* Mission Logs / History List (matching mockup) */}
+          {/* Mission Logs / History List */}
           <div className="flex-1 overflow-y-auto px-3 py-2 scroll-smooth">
             <div className="text-[10px] font-bold tracking-widest text-white/40 uppercase mb-3 px-2 flex items-center gap-2 font-mono">
               Mission Logs
@@ -60,19 +60,8 @@ export default function Sidebar({ isOpen, onToggle, onNavigateHome, onNewSession
             
             <div className="space-y-1">
               {history.length === 0 ? (
-                <div className="space-y-2 px-1">
-                  <div className="flex items-center gap-2 text-xs text-white/70 py-1.5 px-2 rounded hover:bg-white/5 font-mono cursor-pointer">
-                    <span className="text-white/40">✦</span>
-                    <span className="truncate">Copenhagen Trip Planning</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-xs text-white/70 py-1.5 px-2 rounded hover:bg-white/5 font-mono cursor-pointer">
-                    <span className="text-white/40">💻</span>
-                    <span className="truncate">Study Session</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-xs text-white/70 py-1.5 px-2 rounded hover:bg-white/5 font-mono cursor-pointer">
-                    <span className="text-white/40">✏️</span>
-                    <span className="truncate">Writing Project</span>
-                  </div>
+                <div className="text-xs text-white/40 px-2 italic text-center mt-6 py-4 rounded-xl border border-white/5 bg-white/[0.02] font-mono">
+                  No active sessions found.
                 </div>
               ) : (
                 history.map((item) => (
