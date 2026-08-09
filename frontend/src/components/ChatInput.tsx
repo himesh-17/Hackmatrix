@@ -1,6 +1,7 @@
 import { useRef, useEffect, type KeyboardEvent } from 'react';
 import { motion } from 'framer-motion';
-import { Send, Loader2 } from 'lucide-react';
+import { Send, Loader2, Flame, MessageSquare } from 'lucide-react';
+import { useSearchMode } from '@/context/SearchModeContext';
 
 export default function ChatInput({
   query,
@@ -14,6 +15,9 @@ export default function ChatInput({
   isLoading: boolean;
 }) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const { mode } = useSearchMode();
+
+  const isResearch = mode === 'research';
 
   useEffect(() => {
     const textarea = textareaRef.current;
@@ -38,64 +42,80 @@ export default function ChatInput({
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6, delay: 0.3 }}
+      transition={{ duration: 0.5 }}
       className="w-full"
     >
-      <div className="flex items-center gap-2 mb-4">
-        <div className="h-px flex-1 bg-gradient-to-r from-transparent via-space-border to-transparent" />
-        <span className="text-[11px] tracking-[0.25em] text-text-muted uppercase font-medium">
-          Ask the Research Assistant
-        </span>
-        <div className="h-px flex-1 bg-gradient-to-r from-transparent via-space-border to-transparent" />
-      </div>
-
       <div className="relative group">
+        {/* Ambient Outer Blackhole Glow */}
         <div
-          className="absolute -inset-[1px] rounded-2xl bg-gradient-to-r from-accent-blue/20 via-accent-indigo/20 to-accent-blue/20 opacity-0 group-focus-within:opacity-100 transition-opacity duration-500 blur-sm"
+          className={`absolute -inset-0.5 rounded-2xl opacity-0 group-focus-within:opacity-100 transition-opacity duration-500 blur-md pointer-events-none ${
+            isResearch
+              ? 'bg-gradient-to-r from-amber-600/40 via-orange-600/40 to-amber-600/40'
+              : 'bg-gradient-to-r from-white/20 via-white/30 to-white/20'
+          }`}
           aria-hidden="true"
         />
 
-        <div className="relative rounded-2xl border border-space-border/60 bg-space-surface/40 backdrop-blur-sm overflow-hidden group-focus-within:border-accent-blue/30 transition-colors duration-300">
+        <div className="relative rounded-2xl border border-white/15 bg-black/90 backdrop-blur-2xl overflow-hidden group-focus-within:border-orange-500/40 transition-all duration-300 shadow-[0_0_40px_rgba(0,0,0,0.95)]">
           <textarea
             ref={textareaRef}
             value={query}
             onChange={(e) => onQueryChange(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Ask a question about space biology..."
+            placeholder={
+              isResearch
+                ? 'Ask a space biology research question (e.g. OSD-104 muscle transcriptomics)...'
+                : 'Ask a casual space biology question...'
+            }
             disabled={isLoading}
             rows={1}
             aria-label="Research question input"
-            className="w-full bg-transparent text-text-primary placeholder:text-text-muted/60 resize-none px-5 pt-4 pb-14 text-[15px] leading-relaxed focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-transparent text-white placeholder:text-white/40 resize-none px-5 pt-4 pb-14 text-[15px] leading-relaxed focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed font-sans"
           />
 
-          <div className="absolute bottom-0 left-0 right-0 flex items-center justify-between px-4 py-3 border-t border-space-border/20">
-            <span className="text-[11px] text-text-muted/50 font-mono">
-              Powered by NASA OSDR datasets
-            </span>
+          <div className="absolute bottom-0 left-0 right-0 flex items-center justify-between px-4 py-2.5 border-t border-white/10 bg-white/[0.02]">
+            <div className="flex items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 text-[11px] font-mono text-white/50">
+                {isResearch ? (
+                  <>
+                    <Flame className="w-3 h-3 text-orange-400" />
+                    <span className="text-orange-300/80">Research Mode Active</span>
+                  </>
+                ) : (
+                  <>
+                    <MessageSquare className="w-3 h-3 text-white/70" />
+                    <span className="text-white/70">Casual Mode Active</span>
+                  </>
+                )}
+              </span>
+            </div>
 
             <motion.button
-              whileHover={canSubmit ? { scale: 1.05 } : undefined}
-              whileTap={canSubmit ? { scale: 0.95 } : undefined}
+              whileHover={canSubmit ? { scale: 1.03 } : undefined}
+              whileTap={canSubmit ? { scale: 0.97 } : undefined}
               onClick={onSubmit}
               disabled={!canSubmit}
               aria-label="Submit research question"
               className={`
-                relative flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300
-                ${canSubmit
-                  ? 'bg-accent-blue text-white hover:bg-accent-blue/90 shadow-lg shadow-accent-blue/20'
-                  : 'bg-space-elevated text-text-muted cursor-not-allowed'
+                relative flex items-center gap-2 px-4 py-1.5 rounded-xl text-xs font-semibold transition-all duration-300 shadow-lg
+                ${
+                  canSubmit
+                    ? isResearch
+                      ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-[0_0_20px_rgba(249,115,22,0.5)] hover:from-amber-400 hover:to-orange-500'
+                      : 'bg-white/20 text-white border border-white/30 shadow-[0_0_15px_rgba(255,255,255,0.3)] hover:bg-white/30'
+                    : 'bg-white/5 text-white/30 border border-white/5 cursor-not-allowed'
                 }
               `}
             >
               {isLoading ? (
                 <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>Analyzing...</span>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  <span>Processing...</span>
                 </>
               ) : (
                 <>
-                  <span>Research</span>
-                  <Send className="w-3.5 h-3.5" />
+                  <span>{isResearch ? 'Synthesize' : 'Send'}</span>
+                  <Send className="w-3 h-3" />
                 </>
               )}
             </motion.button>
@@ -103,8 +123,8 @@ export default function ChatInput({
         </div>
       </div>
 
-      <p className="text-center text-[11px] text-text-muted/40 mt-3">
-        Press <kbd className="px-1.5 py-0.5 rounded bg-space-surface/60 border border-space-border/30 text-text-muted/60 font-mono text-[10px]">Enter</kbd> to submit · <kbd className="px-1.5 py-0.5 rounded bg-space-surface/60 border border-space-border/30 text-text-muted/60 font-mono text-[10px]">Shift+Enter</kbd> for new line
+      <p className="text-center text-[10px] text-white/30 mt-2 font-mono">
+        Press <kbd className="px-1 py-0.5 rounded bg-white/10 border border-white/10 text-white/60">Enter</kbd> to send · <kbd className="px-1 py-0.5 rounded bg-white/10 border border-white/10 text-white/60">Shift+Enter</kbd> for line break
       </p>
     </motion.div>
   );

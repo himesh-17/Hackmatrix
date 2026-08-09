@@ -3,6 +3,7 @@ import DashboardLayout from './layouts/DashboardLayout';
 import LandingPage from './pages/LandingPage';
 import ChatInterface from './pages/ChatInterface';
 import Preloader from './components/Preloader';
+import { SearchModeProvider } from '@/context/SearchModeContext';
 
 export type AppView = 'landing' | 'chat';
 
@@ -46,6 +47,7 @@ function App() {
       {loading && <Preloader onComplete={() => setLoading(false)} />}
       
       {!loading && (
+        <SearchModeProvider>
         <DashboardLayout 
           currentView={currentView} 
           onViewChange={setCurrentView}
@@ -58,6 +60,7 @@ function App() {
             <ChatInterface key={sessionKey} onSearch={handleAddHistory} />
           )}
         </DashboardLayout>
+      </SearchModeProvider>
       )}
     </>
   );

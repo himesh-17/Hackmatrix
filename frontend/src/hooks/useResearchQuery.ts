@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import type { ResearchAnswer, QueryStatus } from '@/types/research';
+import type { ResearchAnswer, QueryStatus, ChatMessage } from '@/types/research';
 import { askResearchQuestion } from '@/lib/api';
 
 interface UseResearchQueryReturn {
@@ -8,7 +8,8 @@ interface UseResearchQueryReturn {
   status: QueryStatus;
   result: ResearchAnswer | null;
   error: string | null;
-  submitQuery: (question?: string) => Promise<void>;
+  messages: ChatMessage[];
+  submitQuery: (question?: string, mode?: 'casual' | 'research') => Promise<void>;
   reset: () => void;
 }
 
@@ -17,23 +18,75 @@ export function useResearchQuery(): UseResearchQueryReturn {
   const [status, setStatus] = useState<QueryStatus>('idle');
   const [result, setResult] = useState<ResearchAnswer | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
 
-  const submitQuery = useCallback(async (question?: string) => {
+  const submitQuery = useCallback(async (question?: string, mode: 'casual' | 'research' = 'research') => {
     const q = question ?? query;
     if (!q.trim()) return;
 
+    const userMessageId = `user-${Date.now()}`;
+    const assistantMessageId = `assistant-${Date.now()}`;
+    const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+    // Add user message
+    const userMsg: ChatMessage = {
+      id: userMessageId,
+      role: 'user',
+      content: q.trim(),
+      timestamp: timeStr,
+      mode,
+      status: 'success',
+    };
+
+    // Add initial assistant loading message
+    const assistantMsgPlaceholder: ChatMessage = {
+      id: assistantMessageId,
+      role: 'assistant',
+      content: '',
+      timestamp: timeStr,
+      mode,
+      status: 'loading',
+    };
+
+    setMessages((prev) => [...prev, userMsg, assistantMsgPlaceholder]);
     setStatus('loading');
     setError(null);
-    setResult(null);
+    setQuery('');
 
     try {
-      const response = await askResearchQuestion(q.trim());
+      const response = await askResearchQuestion(q.trim(), mode);
       setResult(response);
       setStatus('success');
+
+      // Update assistant message with response
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === assistantMessageId
+            ? {
+                ...msg,
+                status: 'success',
+                content: response.answer,
+                result: response,
+              }
+            : msg
+        )
+      );
     } catch (err) {
       const message = err instanceof Error ? err.message : 'An unexpected error occurred';
       setError(message);
       setStatus('error');
+
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === assistantMessageId
+            ? {
+                ...msg,
+                status: 'error',
+                error: message,
+              }
+            : msg
+        )
+      );
     }
   }, [query]);
 
@@ -42,7 +95,8 @@ export function useResearchQuery(): UseResearchQueryReturn {
     setStatus('idle');
     setResult(null);
     setError(null);
+    setMessages([]);
   }, []);
 
-  return { query, setQuery, status, result, error, submitQuery, reset };
+  return { query, setQuery, status, result, error, messages, submitQuery, reset };
 }
