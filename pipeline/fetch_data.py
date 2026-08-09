@@ -101,5 +101,5 @@ def fetch_all(save_dir: str = "data", limit: int = 100) -> list[dict]:
 
 if __name__ == "__main__":
     import sys
-    limit = int(sys.argv[1]) if len(sys.argv) > 1 else 100
+    limit = int(sys.argv[1]) if len(sys.argv) > 1 else 631
     fetch_all(limit=limit)
