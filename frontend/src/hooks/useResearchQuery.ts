@@ -13,12 +13,12 @@ interface UseResearchQueryReturn {
   reset: () => void;
 }
 
-export function useResearchQuery(): UseResearchQueryReturn {
+export function useResearchQuery(initialMessages: ChatMessage[] = []): UseResearchQueryReturn {
   const [query, setQuery] = useState('');
   const [status, setStatus] = useState<QueryStatus>('idle');
   const [result, setResult] = useState<ResearchAnswer | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
 
   const submitQuery = useCallback(async (question?: string, mode: 'casual' | 'research' = 'research') => {
     const q = question ?? query;
@@ -28,7 +28,6 @@ export function useResearchQuery(): UseResearchQueryReturn {
     const assistantMessageId = `assistant-${Date.now()}`;
     const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-    // Add user message
     const userMsg: ChatMessage = {
       id: userMessageId,
       role: 'user',
@@ -38,7 +37,6 @@ export function useResearchQuery(): UseResearchQueryReturn {
       status: 'success',
     };
 
-    // Add initial assistant loading message
     const assistantMsgPlaceholder: ChatMessage = {
       id: assistantMessageId,
       role: 'assistant',
@@ -54,11 +52,24 @@ export function useResearchQuery(): UseResearchQueryReturn {
     setQuery('');
 
     try {
-      const response = await askResearchQuestion(q.trim(), mode);
+      // Build history from previous assistant messages (last 6 messages = 3 turns)
+      const history = messages
+        .filter((m) => m.role === 'assistant' && m.content)
+        .slice(-3)
+        .map((m) => {
+          const userMsgForAnswer = messages.find(
+            (um) => um.role === 'user' && um.timestamp <= m.timestamp
+          );
+          return {
+            question: userMsgForAnswer?.content || '',
+            answer: m.content,
+          };
+        });
+
+      const response = await askResearchQuestion(q.trim(), mode, history);
       setResult(response);
       setStatus('success');
 
-      // Update assistant message with response
       setMessages((prev) =>
         prev.map((msg) =>
           msg.id === assistantMessageId
@@ -88,7 +99,7 @@ export function useResearchQuery(): UseResearchQueryReturn {
         )
       );
     }
-  }, [query]);
+  }, [query, messages]);
 
   const reset = useCallback(() => {
     setQuery('');

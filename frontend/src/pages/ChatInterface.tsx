@@ -1,18 +1,22 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ChatInput from '@/components/ChatInput';
 import AnswerDisplay from '@/components/AnswerDisplay';
 import { useResearchQuery } from '@/hooks/useResearchQuery';
-import { useSearchMode, type SearchMode } from '@/context/SearchModeContext';
+import { useSearchMode } from '@/context/SearchModeContext';
 import { ChevronDown, Check, Flame, MessageSquare, Bot } from 'lucide-react';
+import type { ChatMessage, ChatSession } from '@/types/research';
 
 interface ChatInterfaceProps {
-  onSearch?: (query: string) => void;
+  session: ChatSession | null;
+  onUpdateMessages: (sessionId: string, messages: ChatMessage[], mode: 'casual' | 'research') => void;
 }
 
-export default function ChatInterface({ onSearch }: ChatInterfaceProps) {
-  const { query, setQuery, status, result, messages, submitQuery } = useResearchQuery();
-  const { mode, setMode } = useSearchMode();
+export default function ChatInterface({ session, onUpdateMessages }: ChatInterfaceProps) {
+  const { mode } = useSearchMode();
+  const { query, setQuery, status, result, messages, submitQuery } = useResearchQuery(
+    session?.messages || []
+  );
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -20,6 +24,7 @@ export default function ChatInterface({ onSearch }: ChatInterfaceProps) {
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const hasInteracted = messages.length > 0;
+  const sessionId = session?.id;
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -41,18 +46,18 @@ export default function ChatInterface({ onSearch }: ChatInterfaceProps) {
     }
   }, [messages.length, status, result, hasInteracted]);
 
-  const handleSubmit = (overrideQuery?: string) => {
+  // Persist messages to session whenever they change
+  useEffect(() => {
+    if (sessionId && messages.length > 0) {
+      onUpdateMessages(sessionId, messages, mode);
+    }
+  }, [messages, sessionId, mode, onUpdateMessages]);
+
+  const handleSubmit = useCallback((overrideQuery?: string) => {
     const textToSubmit = overrideQuery ?? query;
     if (!textToSubmit.trim()) return;
-
-    if (onSearch) onSearch(textToSubmit.trim());
     submitQuery(textToSubmit.trim(), mode);
-  };
-
-  const handleSelectMode = (newMode: SearchMode) => {
-    setMode(newMode);
-    setDropdownOpen(false);
-  };
+  }, [query, mode, submitQuery]);
 
   return (
     <div className="flex flex-col h-full bg-black relative overflow-hidden font-sans">
@@ -84,7 +89,7 @@ export default function ChatInterface({ onSearch }: ChatInterfaceProps) {
                 className="absolute top-full left-0 mt-1.5 w-52 rounded-xl border border-[#f97316]/35 bg-black shadow-[0_0_25px_rgba(0,0,0,0.9)] p-1.5 z-50 backdrop-blur-2xl"
               >
                 <button
-                  onClick={() => handleSelectMode('research')}
+                  onClick={() => { setDropdownOpen(false); }}
                   className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-mono transition-colors text-left ${
                     mode === 'research' ? 'bg-[#f97316]/15 text-[#f97316] font-semibold' : 'text-white/80 hover:bg-white/5'
                   }`}
@@ -97,7 +102,7 @@ export default function ChatInterface({ onSearch }: ChatInterfaceProps) {
                 </button>
 
                 <button
-                  onClick={() => handleSelectMode('casual')}
+                  onClick={() => { setDropdownOpen(false); }}
                   className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-mono transition-colors text-left ${
                     mode === 'casual' ? 'bg-white/15 text-white font-semibold' : 'text-white/80 hover:bg-white/5'
                   }`}
@@ -117,7 +122,7 @@ export default function ChatInterface({ onSearch }: ChatInterfaceProps) {
         <div />
       </div>
 
-      {/* Main Chat Stream Container (Claude 3.5 Pattern: Spacious max-w-4xl) */}
+      {/* Main Chat Stream Container */}
       <div ref={scrollContainerRef} className="flex-1 overflow-y-auto scroll-smooth pb-44 pt-8 relative z-10 w-full">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 w-full flex flex-col gap-6">
           <AnimatePresence mode="wait">
@@ -129,7 +134,6 @@ export default function ChatInterface({ onSearch }: ChatInterfaceProps) {
                 exit={{ opacity: 0, y: -15, transition: { duration: 0.2 } }}
                 className="flex flex-col items-center justify-center min-h-[45vh] text-center mt-16"
               >
-                {/* Center Header */}
                 <h2 className="text-3xl sm:text-4xl font-bold font-mono text-white tracking-tight">
                   How can I help you today?
                 </h2>
@@ -141,11 +145,9 @@ export default function ChatInterface({ onSearch }: ChatInterfaceProps) {
                 animate={{ opacity: 1 }}
                 className="flex flex-col gap-8 w-full pb-8"
               >
-                {/* Render Multi-Turn Message Thread (Exact Claude 3.5 pattern) */}
                 {messages.map((msg) => (
                   <div key={msg.id} className="w-full space-y-4">
                     {msg.role === 'user' ? (
-                      /* User Question (Claude Right Aligned Pill) */
                       <div className="flex justify-end w-full">
                         <div className="max-w-[75%] bg-[#1a120b] border border-[#f97316]/30 px-4 py-2.5 rounded-2xl rounded-tr-sm text-white text-[13.5px] leading-relaxed shadow-sm font-sans">
                           <div className="text-white/90 leading-relaxed font-normal">{msg.content}</div>
@@ -153,7 +155,6 @@ export default function ChatInterface({ onSearch }: ChatInterfaceProps) {
                         </div>
                       </div>
                     ) : (
-                      /* Assistant Reply (Claude Left Aligned Stream starting with Avatar) */
                       <div className="flex justify-start items-start gap-3.5 w-full">
                         <div className="w-7 h-7 rounded-full bg-[#f97316]/15 border border-[#f97316]/40 flex items-center justify-center flex-shrink-0 mt-0.5 shadow-sm">
                           <Bot className="w-3.5 h-3.5 text-[#f97316]" />
@@ -179,7 +180,7 @@ export default function ChatInterface({ onSearch }: ChatInterfaceProps) {
         </div>
       </div>
 
-      {/* Pinned Input Bar at Bottom (Centered max-w-3xl) */}
+      {/* Pinned Input Bar at Bottom */}
       <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black via-black/95 to-transparent pt-14 pb-6 px-4 sm:px-6 z-20">
         <div className="max-w-3xl mx-auto w-full">
           <ChatInput

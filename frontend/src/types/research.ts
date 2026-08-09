@@ -42,3 +42,11 @@ export interface ResearchQuery {
 }
 
 export type QueryStatus = 'idle' | 'loading' | 'success' | 'error';
+
+export interface ChatSession {
+  id: string;
+  title: string;
+  mode: 'casual' | 'research';
+  messages: ChatMessage[];
+  createdAt: number;
+}
