@@ -1,9 +1,9 @@
 import requests
 import json
 import os
+import time
 
 OSDR_BASE = "https://visualization.osdr.nasa.gov/biodata/api/v2"
-DATASETS = ["OSD-104", "OSD-105", "OSD-379", "OSD-48", "OSD-599", "OSD-326"]
 
 
 def fetch_dataset(osd_id: str) -> dict:
@@ -18,7 +18,6 @@ def extract_text(data: dict) -> str:
     meta = data.get("metadata", data)
     parts = []
 
-    # Key metadata fields (space-separated keys)
     field_map = {
         "title": ["study title", "project title"],
         "description": ["study description"],
@@ -38,7 +37,6 @@ def extract_text(data: dict) -> str:
                     val = "; ".join(str(v) for v in val)
                 parts.append(f"{label}: {val}")
 
-    # Characteristics
     chars = meta.get("characteristics", [])
     if isinstance(chars, list):
         for c in chars[:10]:
@@ -47,7 +45,6 @@ def extract_text(data: dict) -> str:
             elif isinstance(c, str):
                 parts.append(f"characteristic: {c}")
 
-    # Factor values
     factors = meta.get("factor value", [])
     if isinstance(factors, list):
         for f in factors[:10]:
@@ -57,27 +54,43 @@ def extract_text(data: dict) -> str:
     return "\n".join(parts)
 
 
-def fetch_all(save_dir: str = "data") -> list[dict]:
+def get_all_dataset_ids() -> list[str]:
+    """Get list of all available OSDR dataset IDs."""
+    url = f"{OSDR_BASE}/datasets/?format=json"
+    resp = requests.get(url, timeout=30)
+    resp.raise_for_status()
+    data = resp.json()
+    return sorted(data.keys(), key=lambda x: int(x.split("-")[1]))
+
+
+def fetch_all(save_dir: str = "data", limit: int = 100) -> list[dict]:
     os.makedirs(save_dir, exist_ok=True)
     docs = []
 
-    for osd_id in DATASETS:
-        print(f"Fetching {osd_id}...")
+    all_ids = get_all_dataset_ids()
+    print(f"Found {len(all_ids)} total datasets, fetching {limit}...")
+
+    for i, osd_id in enumerate(all_ids[:limit]):
+        print(f"[{i+1}/{limit}] Fetching {osd_id}...", end=" ")
         try:
             data = fetch_dataset(osd_id)
             text = extract_text(data)
-            docs.append({
-                "osd_id": osd_id,
-                "text": text,
-                "metadata": {
-                    "source": "OSDR",
+            if len(text) > 50:  # skip empty datasets
+                docs.append({
                     "osd_id": osd_id,
-                    "url": f"https://osdr.nasa.gov/osdr/datasets/{osd_id}"
-                }
-            })
-            print(f"  OK - {len(text)} chars")
+                    "text": text,
+                    "metadata": {
+                        "source": "OSDR",
+                        "osd_id": osd_id,
+                        "url": f"https://osdr.nasa.gov/osdr/datasets/{osd_id}"
+                    }
+                })
+                print(f"OK - {len(text)} chars")
+            else:
+                print("SKIP - too short")
         except Exception as e:
-            print(f"  FAIL - {e}")
+            print(f"FAIL - {e}")
+        time.sleep(0.2)  # rate limit
 
     out_path = os.path.join(save_dir, "osdr_documents.json")
     with open(out_path, "w") as f:
@@ -87,4 +100,6 @@ def fetch_all(save_dir: str = "data") -> list[dict]:
 
 
 if __name__ == "__main__":
-    fetch_all()
+    import sys
+    limit = int(sys.argv[1]) if len(sys.argv) > 1 else 100
+    fetch_all(limit=limit)
