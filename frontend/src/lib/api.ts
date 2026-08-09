@@ -2,25 +2,29 @@ import type { ResearchAnswer, AnswerSource, ToolExecution } from '@/types/resear
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 
+interface HistoryMessage {
+  question: string;
+  answer: string;
+}
+
 /**
- * Executes or fetches research questions.
- * Tries the real backend first; if unavailable, seamlessly falls back to dynamic synthesis.
+ * Sends a question to the real backend with optional multi-turn history.
+ * Falls back to dynamic synthesis if backend is unreachable.
  */
 export async function askResearchQuestion(
   question: string,
-  mode: 'casual' | 'research' = 'research'
+  mode: 'casual' | 'research' = 'research',
+  history: HistoryMessage[] = []
 ): Promise<ResearchAnswer> {
-  // Try calling real API
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 4000); // 4s timeout before fallback
+    const timeoutId = setTimeout(() => controller.abort(), 60000); // 60s for RAG pipeline
 
-    // Route to the correct mode-specific endpoint
     const endpoint = mode === 'casual' ? '/api/casual' : '/api/research';
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ question }),
+      body: JSON.stringify({ question, history }),
       signal: controller.signal,
     });
 
@@ -39,10 +43,10 @@ export async function askResearchQuestion(
       };
     }
   } catch (err) {
-    console.warn('[SpaceBio AI] Backend API unreachable or timing out, using dynamic intelligent fallback:', err);
+    console.warn('[SpaceBio] Backend unreachable, using fallback:', err);
   }
 
-  // Fallback to rich dynamic simulation
+  // Fallback only on real network errors
   await simulateDelay(mode === 'casual' ? 1200 : 2000);
   return generateDynamicResponse(question, mode);
 }

@@ -29,6 +29,7 @@ export default function AnswerDisplay({
   result,
   error,
   onRetry,
+  onSelectFollowup,
 }: AnswerDisplayProps) {
   if (status === 'idle') return null;
 
@@ -43,7 +44,7 @@ export default function AnswerDisplay({
         {status === 'loading' && <LoadingState key="loading" />}
         {status === 'error' && <ErrorState key="error" error={error} onRetry={onRetry} />}
         {status === 'success' && result && (
-          <SuccessState key="success" result={result} />
+          <SuccessState key="success" result={result} onRetry={onRetry} onSelectFollowup={onSelectFollowup} />
         )}
       </AnimatePresence>
     </motion.div>
@@ -119,8 +120,12 @@ function ErrorState({ error, onRetry }: { error: string | null; onRetry?: () => 
 
 function SuccessState({
   result,
+  onRetry,
+  onSelectFollowup,
 }: {
   result: ResearchAnswer;
+  onRetry?: () => void;
+  onSelectFollowup?: (question: string) => void;
 }) {
   const [copied, setCopied] = useState(false);
 
@@ -168,7 +173,22 @@ function SuccessState({
         })}
       </div>
 
-      {/* Claude Minimal Footer Copy Icon */}
+      {/* Suggested Follow-ups */}
+      {onSelectFollowup && result.suggestedFollowups && result.suggestedFollowups.length > 0 && (
+        <div className="flex flex-wrap gap-2 pt-2">
+          {result.suggestedFollowups.map((followup, i) => (
+            <button
+              key={i}
+              onClick={() => onSelectFollowup(followup)}
+              className="px-3 py-1.5 rounded-full text-[11px] font-mono text-[#f97316] border border-[#f97316]/30 bg-[#f97316]/5 hover:bg-[#f97316]/15 transition-colors"
+            >
+              {followup.length > 60 ? followup.slice(0, 57) + '...' : followup}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Footer Icons */}
       <div className="flex items-center gap-3 pt-2 text-[11px] font-mono text-white/35">
         <button
           onClick={handleCopy}
