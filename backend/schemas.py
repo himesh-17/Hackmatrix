@@ -16,14 +16,21 @@ class AskRequest(BaseModel):
     mode: str = Field("research", description="Query mode: 'casual' or 'research'")
 
 
+class HistoryMessage(BaseModel):
+    """A single conversation turn."""
+    question: str
+    answer: str
+
 class ResearchRequest(BaseModel):
     """Request body for /api/research — detailed mode with full citations."""
     question: str = Field(..., min_length=1, description="The space biology question")
+    history: list[HistoryMessage] = Field(default_factory=list, description="Previous Q&A turns for multi-turn context")
 
 
 class CasualRequest(BaseModel):
     """Request body for /api/casual — summarized quick answers."""
     question: str = Field(..., min_length=1, description="The space biology question")
+    history: list[HistoryMessage] = Field(default_factory=list, description="Previous Q&A turns for multi-turn context")
 
 
 # ---------------------------------------------------------------------------
