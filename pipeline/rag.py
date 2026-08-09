@@ -131,7 +131,7 @@ def ask(qa_chain, question: str, history: list[dict] = None) -> dict:
         return {
             "answer": f"Error generating answer: {str(e)}",
             "sources": [],
-            "confidence": 0,
+            "confidence": "low",
             "organism_detected": None
         }
 
