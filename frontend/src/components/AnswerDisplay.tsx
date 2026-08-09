@@ -198,17 +198,6 @@ function SuccessState({
           {copied ? <Check className="w-3.5 h-3.5 text-[#f97316]" /> : <Copy className="w-3.5 h-3.5" />}
           <span>{copied ? 'Copied' : 'Copy'}</span>
         </button>
-
-        {onRetry && (
-          <button
-            onClick={onRetry}
-            className="flex items-center gap-1 hover:text-white transition-colors"
-            title="Retry response"
-          >
-            <RotateCcw className="w-3.5 h-3.5 text-[#f97316]" />
-            <span>Regenerate</span>
-          </button>
-        )}
       </div>
     </motion.div>
   );
