@@ -15,10 +15,12 @@ export async function askResearchQuestion(
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 4000); // 4s timeout before fallback
 
-    const response = await fetch(`${API_BASE_URL}/api/research`, {
+    // Route to the correct mode-specific endpoint
+    const endpoint = mode === 'casual' ? '/api/casual' : '/api/research';
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ question, mode }),
+      body: JSON.stringify({ question }),
       signal: controller.signal,
     });
 
