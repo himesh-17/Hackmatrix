@@ -1,10 +1,12 @@
 import os
 import sys
+import time
+from collections import defaultdict
 from dotenv import load_dotenv
 
 load_dotenv()
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pipeline.rag import setup_pipeline, ask, build_vectorstore, chunk_documents, load_documents, create_qa_chain
 from pipeline.fetch_data import fetch_all
@@ -17,6 +19,20 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Rate limiting: 10 requests per minute per IP
+_rate_limits = defaultdict(list)
+RATE_LIMIT = 10
+RATE_WINDOW = 60  # seconds
+
+
+def check_rate_limit(ip: str):
+    now = time.time()
+    _rate_limits[ip] = [t for t in _rate_limits[ip] if now - t < RATE_WINDOW]
+    if len(_rate_limits[ip]) >= RATE_LIMIT:
+        raise HTTPException(429, "Rate limit exceeded. Try again in a minute.")
+    _rate_limits[ip].append(now)
+
 
 _chains = {}
 
@@ -39,19 +55,28 @@ def get_chain(mode: str = "research"):
 
 @app.get("/health")
 def health():
-    return {"status": "ok"}
+    return {"status": "ok", "datasets": 630}
 
 
 @app.post("/ask")
-def ask_question(body: dict):
+def ask_question(request: Request, body: dict):
+    # Rate limit
+    client_ip = request.client.host
+    check_rate_limit(client_ip)
+
     question = body.get("question", "").strip()
     mode = body.get("mode", "research").strip().lower()
+
     if not question:
         raise HTTPException(400, "Question is required")
     if mode not in ("casual", "research"):
         mode = "research"
-    chain = get_chain(mode)
-    return ask(chain, question)
+
+    try:
+        chain = get_chain(mode)
+        return ask(chain, question)
+    except Exception as e:
+        raise HTTPException(500, f"Error processing question: {str(e)}")
 
 
 @app.post("/refresh")
