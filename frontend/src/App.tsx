@@ -37,7 +37,11 @@ function App() {
       messages: [],
       createdAt: Date.now(),
     };
-    setSessions((prev) => [newSession, ...prev]);
+    setSessions((prev) => {
+      const updated = [newSession, ...prev];
+      saveSessions(updated);
+      return updated;
+    });
     setCurrentSessionId(id);
     saveCurrentSessionId(id);
     setCurrentView('chat');
@@ -53,6 +57,21 @@ function App() {
     setCurrentSessionId(null);
     saveCurrentSessionId(null);
     setCurrentView('chat');
+  }, []);
+
+  const handleDeleteSession = useCallback((id: string) => {
+    setSessions((prev) => {
+      const updated = prev.filter((s) => s.id !== id);
+      saveSessions(updated);
+      return updated;
+    });
+    setCurrentSessionId((prevId) => {
+      if (prevId === id) {
+        saveCurrentSessionId(null);
+        return null;
+      }
+      return prevId;
+    });
   }, []);
 
   const handleUpdateSessionMessages = useCallback(
@@ -86,6 +105,7 @@ function App() {
         sessions={sessions}
         currentSessionId={currentSessionId}
         onSelectSession={handleSelectSession}
+        onDeleteSession={handleDeleteSession}
       >
         {loading && <Preloader onComplete={() => setLoading(false)} />}
         {!loading && currentView === 'landing' && (

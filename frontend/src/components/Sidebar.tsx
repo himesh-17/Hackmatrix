@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { MessageSquare, ChevronLeft, PanelLeft, Orbit, Sparkles, Clock } from 'lucide-react';
+import { MessageSquare, ChevronLeft, PanelLeft, Orbit, Sparkles, Clock, Trash2 } from 'lucide-react';
 import type { ChatSession } from '@/types/research';
 
 interface SidebarProps {
@@ -10,6 +10,7 @@ interface SidebarProps {
   sessions: ChatSession[];
   currentSessionId: string | null;
   onSelectSession: (id: string) => void;
+  onDeleteSession: (id: string) => void;
 }
 
 export default function Sidebar({
@@ -20,6 +21,7 @@ export default function Sidebar({
   sessions,
   currentSessionId,
   onSelectSession,
+  onDeleteSession,
 }: SidebarProps) {
   return (
     <AnimatePresence mode="wait">
@@ -75,18 +77,34 @@ export default function Sidebar({
                 </div>
               ) : (
                 sessions.map((session) => (
-                  <button
+                  <div
                     key={session.id}
-                    onClick={() => onSelectSession(session.id)}
-                    className={`w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-xs transition-all text-left font-mono truncate border ${
+                    className={`group relative w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-xs transition-all font-mono border ${
                       currentSessionId === session.id
                         ? 'text-white bg-[#f97316]/10 border-[#f97316]/40'
                         : 'text-white/80 hover:text-white hover:bg-white/5 border-transparent hover:border-[#f97316]/30'
                     }`}
                   >
-                    <MessageSquare className="w-3.5 h-3.5 text-[#f97316] flex-shrink-0" />
-                    <span className="truncate">{session.title}</span>
-                  </button>
+                    <button
+                      onClick={() => onSelectSession(session.id)}
+                      className="flex items-center gap-2 min-w-0 flex-1 text-left truncate mr-1"
+                    >
+                      <MessageSquare className="w-3.5 h-3.5 text-[#f97316] flex-shrink-0" />
+                      <span className="truncate">{session.title}</span>
+                    </button>
+
+                    {/* Delete Chat Button */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onDeleteSession(session.id);
+                      }}
+                      title="Delete chat history"
+                      className="opacity-0 group-hover:opacity-100 p-1 rounded-md text-white/40 hover:text-red-400 hover:bg-red-500/10 transition-all flex-shrink-0"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 ))
               )}
             </div>

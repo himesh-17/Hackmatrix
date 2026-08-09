@@ -11,6 +11,7 @@ interface DashboardLayoutProps {
   sessions: ChatSession[];
   currentSessionId: string | null;
   onSelectSession: (id: string) => void;
+  onDeleteSession: (id: string) => void;
 }
 
 export default function DashboardLayout({
@@ -21,6 +22,7 @@ export default function DashboardLayout({
   sessions,
   currentSessionId,
   onSelectSession,
+  onDeleteSession,
 }: DashboardLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -50,6 +52,7 @@ export default function DashboardLayout({
             sessions={sessions}
             currentSessionId={currentSessionId}
             onSelectSession={onSelectSession}
+            onDeleteSession={onDeleteSession}
           />
         </div>
 

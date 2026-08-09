@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import ChatInput from '@/components/ChatInput';
 import AnswerDisplay from '@/components/AnswerDisplay';
 import { useResearchQuery } from '@/hooks/useResearchQuery';
-import { useSearchMode } from '@/context/SearchModeContext';
+import { useSearchMode, type SearchMode } from '@/context/SearchModeContext';
 import { ChevronDown, Check, Flame, MessageSquare, Bot } from 'lucide-react';
 import type { ChatMessage, ChatSession } from '@/types/research';
 
@@ -13,7 +13,7 @@ interface ChatInterfaceProps {
 }
 
 export default function ChatInterface({ session, onUpdateMessages }: ChatInterfaceProps) {
-  const { mode } = useSearchMode();
+  const { mode, setMode } = useSearchMode();
   const { query, setQuery, status, result, messages, submitQuery } = useResearchQuery(
     session?.messages || []
   );
@@ -25,6 +25,13 @@ export default function ChatInterface({ session, onUpdateMessages }: ChatInterfa
 
   const hasInteracted = messages.length > 0;
   const sessionId = session?.id;
+
+  // Sync mode from session if present
+  useEffect(() => {
+    if (session?.mode) {
+      setMode(session.mode);
+    }
+  }, [session?.id]);
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -59,6 +66,11 @@ export default function ChatInterface({ session, onUpdateMessages }: ChatInterfa
     submitQuery(textToSubmit.trim(), mode);
   }, [query, mode, submitQuery]);
 
+  const handleSelectMode = (newMode: SearchMode) => {
+    setMode(newMode);
+    setDropdownOpen(false);
+  };
+
   return (
     <div className="flex flex-col h-full bg-black relative overflow-hidden font-sans">
       {/* Background Subtle Warm Ambient Glow */}
@@ -89,7 +101,7 @@ export default function ChatInterface({ session, onUpdateMessages }: ChatInterfa
                 className="absolute top-full left-0 mt-1.5 w-52 rounded-xl border border-[#f97316]/35 bg-black shadow-[0_0_25px_rgba(0,0,0,0.9)] p-1.5 z-50 backdrop-blur-2xl"
               >
                 <button
-                  onClick={() => { setDropdownOpen(false); }}
+                  onClick={() => handleSelectMode('research')}
                   className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-mono transition-colors text-left ${
                     mode === 'research' ? 'bg-[#f97316]/15 text-[#f97316] font-semibold' : 'text-white/80 hover:bg-white/5'
                   }`}
@@ -102,7 +114,7 @@ export default function ChatInterface({ session, onUpdateMessages }: ChatInterfa
                 </button>
 
                 <button
-                  onClick={() => { setDropdownOpen(false); }}
+                  onClick={() => handleSelectMode('casual')}
                   className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-mono transition-colors text-left ${
                     mode === 'casual' ? 'bg-white/15 text-white font-semibold' : 'text-white/80 hover:bg-white/5'
                   }`}
