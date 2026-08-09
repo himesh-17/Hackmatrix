@@ -60,7 +60,7 @@ export default function ChatInput({
           disabled={isLoading}
           rows={1}
           aria-label="Research question input"
-          className="w-full bg-transparent text-white placeholder:text-white/40 resize-none pt-1 pb-10 text-[15px] leading-relaxed focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed font-sans"
+          className="w-full bg-transparent text-white placeholder:text-white/40 resize-none pt-1 pb-10 text-[15px] leading-relaxed focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed font-sans overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
         />
 
         {/* Inner Bottom Controls Bar */}
