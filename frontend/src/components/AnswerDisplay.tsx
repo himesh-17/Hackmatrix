@@ -43,7 +43,7 @@ export default function AnswerDisplay({
         {status === 'loading' && <LoadingState key="loading" />}
         {status === 'error' && <ErrorState key="error" error={error} onRetry={onRetry} />}
         {status === 'success' && result && (
-          <SuccessState key="success" result={result} onRetry={onRetry} />
+          <SuccessState key="success" result={result} />
         )}
       </AnimatePresence>
     </motion.div>
@@ -119,10 +119,8 @@ function ErrorState({ error, onRetry }: { error: string | null; onRetry?: () => 
 
 function SuccessState({
   result,
-  onRetry,
 }: {
   result: ResearchAnswer;
-  onRetry?: () => void;
 }) {
   const [copied, setCopied] = useState(false);
 
@@ -139,7 +137,7 @@ function SuccessState({
       exit={{ opacity: 0 }}
       className="space-y-3.5 w-full text-left font-sans"
     >
-      {/* Clean Claude 3.5 Output Text (Compact text-[13.5px] leading-[1.65]) */}
+      {/* Clean Claude 3.5 Output Text */}
       <div className="text-[13.5px] text-white/85 leading-[1.65] space-y-3 font-sans text-left">
         {result.answer.split('\n\n').map((paragraph, index) => {
           if (paragraph.startsWith('## ') || paragraph.startsWith('### ')) {
@@ -170,7 +168,7 @@ function SuccessState({
         })}
       </div>
 
-      {/* Claude Minimal Footer Icons Line */}
+      {/* Claude Minimal Footer Copy Icon */}
       <div className="flex items-center gap-3 pt-2 text-[11px] font-mono text-white/35">
         <button
           onClick={handleCopy}
@@ -180,17 +178,6 @@ function SuccessState({
           {copied ? <Check className="w-3.5 h-3.5 text-[#f97316]" /> : <Copy className="w-3.5 h-3.5" />}
           <span>{copied ? 'Copied' : 'Copy'}</span>
         </button>
-
-        {onRetry && (
-          <button
-            onClick={onRetry}
-            className="flex items-center gap-1 hover:text-white transition-colors"
-            title="Retry response"
-          >
-            <RotateCcw className="w-3.5 h-3.5 text-[#f97316]" />
-            <span>Regenerate</span>
-          </button>
-        )}
       </div>
     </motion.div>
   );
