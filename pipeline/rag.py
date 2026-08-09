@@ -12,21 +12,40 @@ from langchain_huggingface import HuggingFaceEmbeddings
 CHROMA_DIR = "chroma_db"
 DATA_FILE = "data/osdr_documents.json"
 
-PROMPT = """You are a space biology expert specializing in NASA spaceflight research. 
-Answer the question using the provided context below. Be specific and detailed.
-
-RULES:
-- Always cite the OSD-ID dataset in your answer (e.g., "According to OSD-326...")
-- Reference specific findings, genes, proteins, or pathways mentioned in the context
-- If multiple datasets support your answer, cite all of them
-- Only say "not enough information" if the context is completely unrelated to the question
+PROMPTS = {
+    "casual": PromptTemplate(
+        template="""You are a space biology expert. Answer simply in 1-2 sentences.
+Do NOT add information not in the context. Do NOT cite anything.
+If the context doesn't help, say "I don't have enough information on that."
 
 Context:
 {context}
 
 Question: {question}
 
-Answer (include OSD-ID citations):"""
+Answer:""",
+        input_variables=["context", "question"]
+    ),
+    "research": PromptTemplate(
+        template="""You are a space biology expert. Answer using ONLY the provided context.
+Do NOT add information not present in the context.
+
+RULES:
+- When context explicitly mentions a finding and an OSD-ID together, cite the OSD-ID
+- Do NOT invent study titles or descriptions for OSD-IDs
+- Include relevant details from context: organisms, missions, timeframes, methods
+- Cite each OSD-ID only once, at the end of the relevant claim
+- If the context doesn't contain enough info, say so
+
+Context:
+{context}
+
+Question: {question}
+
+Answer:""",
+        input_variables=["context", "question"]
+    ),
+}
 
 
 def load_documents() -> list[Document]:
@@ -54,10 +73,10 @@ def build_vectorstore(chunks: list[Document]) -> Chroma:
     return vs
 
 
-def create_qa_chain(vectorstore: Chroma):
+def create_qa_chain(vectorstore: Chroma, mode: str = "research"):
     llm = ChatGroq(model="llama-3.1-8b-instant", temperature=0.1)
     retriever = vectorstore.as_retriever(search_kwargs={"k": 6})
-    prompt = PromptTemplate(template=PROMPT, input_variables=["context", "question"])
+    prompt = PROMPTS.get(mode, PROMPTS["research"])
     return RetrievalQA.from_chain_type(
         llm=llm, retriever=retriever, return_source_documents=True,
         chain_type_kwargs={"prompt": prompt}

@@ -1,157 +1,65 @@
 import { useState, type ReactNode } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import {
-  Atom,
-  FlaskConical,
-  Info,
-  Database,
-  Menu,
-  X,
-  ExternalLink,
-} from 'lucide-react';
+import type { AppView, ChatHistoryItem } from '@/App';
+import Sidebar from '@/components/Sidebar';
 
 interface DashboardLayoutProps {
   children: ReactNode;
+  currentView: AppView;
+  onViewChange: (view: AppView) => void;
+  onNewSession?: () => void;
+  chatHistory: ChatHistoryItem[];
 }
 
-export default function DashboardLayout({ children }: DashboardLayoutProps) {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+export default function DashboardLayout({ children, currentView, onViewChange, onNewSession, chatHistory }: DashboardLayoutProps) {
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false); // For mobile drawer
 
+  if (currentView === 'chat') {
+    return (
+      <div className="flex h-screen bg-[#18181b] overflow-hidden text-[#fafafa] font-sans w-full">
+        {/* Mobile Sidebar Backdrop */}
+        {mobileMenuOpen && (
+          <div 
+            className="fixed inset-0 bg-black/50 z-40 md:hidden"
+            onClick={() => setMobileMenuOpen(false)}
+          />
+        )}
+
+        {/* Sidebar */}
+        <div className={`
+          fixed md:static inset-y-0 left-0 z-50
+          transform ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0
+          transition-transform duration-300 ease-in-out
+        `}>
+          <Sidebar 
+            isOpen={sidebarOpen} 
+            onToggle={() => setSidebarOpen(!sidebarOpen)} 
+            onNavigateHome={() => onViewChange('landing')}
+            onNewSession={onNewSession}
+            history={chatHistory}
+          />
+        </div>
+
+        {/* Main Content */}
+        <main className="flex-1 relative overflow-hidden flex flex-col bg-[#18181b] h-full w-full max-w-full">
+           {/* Mobile Header (Only visible on small screens when in chat) */}
+           <div className="md:hidden flex items-center justify-between p-3 border-b border-[#27272a] bg-[#18181b]">
+             <button onClick={() => setMobileMenuOpen(true)} className="p-2 rounded-md hover:bg-[#27272a] text-[#a1a1aa]">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+             </button>
+             <span className="font-semibold text-sm">SpaceBio</span>
+             <div className="w-8" /> {/* Spacer */}
+           </div>
+          {children}
+        </main>
+      </div>
+    );
+  }
+
+  // Landing Page Layout (No wrapping UI, just pass through)
   return (
-    <div className="relative min-h-screen flex flex-col">
-      <div className="starfield" aria-hidden="true" />
-      <div className="cosmic-glow" aria-hidden="true" />
-
-      <nav
-        className="relative z-20 border-b border-space-border/50 backdrop-blur-md bg-space-deep/60"
-        role="navigation"
-        aria-label="Main navigation"
-      >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-3">
-              <div className="relative flex items-center justify-center w-9 h-9">
-                <div className="absolute inset-0 rounded-full border border-accent-blue/30" />
-                <Atom className="w-5 h-5 text-accent-blue" />
-              </div>
-              <div className="flex flex-col">
-                <span className="text-sm font-semibold tracking-wider text-text-primary leading-none">
-                  SPACEBIO AI
-                </span>
-                <span className="text-[10px] tracking-[0.2em] text-text-muted uppercase leading-none mt-0.5">
-                  NASA OSDR Research
-                </span>
-              </div>
-            </div>
-
-            <div className="hidden md:flex items-center gap-1">
-              <NavLink icon={<FlaskConical className="w-3.5 h-3.5" />} label="Research" active />
-              <NavLink icon={<Database className="w-3.5 h-3.5" />} label="Datasets" />
-              <NavLink icon={<Info className="w-3.5 h-3.5" />} label="About" />
-            </div>
-
-            <button
-              className="md:hidden p-2 rounded-lg text-text-secondary hover:text-text-primary hover:bg-space-surface/50 transition-colors"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
-              aria-expanded={mobileMenuOpen}
-            >
-              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-            </button>
-          </div>
-        </div>
-
-        <AnimatePresence>
-          {mobileMenuOpen && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              className="md:hidden overflow-hidden border-t border-space-border/30"
-            >
-              <div className="px-4 py-3 space-y-1 bg-space-deep/80 backdrop-blur-md">
-                <MobileNavLink icon={<FlaskConical className="w-4 h-4" />} label="Research" active />
-                <MobileNavLink icon={<Database className="w-4 h-4" />} label="Datasets" />
-                <MobileNavLink icon={<Info className="w-4 h-4" />} label="About" />
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </nav>
-
-      <main className="relative z-10 flex-1">
-        {children}
-      </main>
-
-      <footer className="relative z-10 border-t border-space-border/30 bg-space-deep/40 backdrop-blur-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <Atom className="w-4 h-4 text-accent-blue/60" />
-              <span className="text-sm text-text-muted">
-                NASA OSDR • Space Biology Research Intelligence
-              </span>
-            </div>
-            <div className="flex items-center gap-6">
-              <a
-                href="https://osdr.nasa.gov/bio/repo/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-xs text-text-muted hover:text-text-accent transition-colors flex items-center gap-1.5"
-              >
-                NASA OSDR
-                <ExternalLink className="w-3 h-3" />
-              </a>
-              <a
-                href="https://genelab.nasa.gov/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-xs text-text-muted hover:text-text-accent transition-colors flex items-center gap-1.5"
-              >
-                GeneLab
-                <ExternalLink className="w-3 h-3" />
-              </a>
-              <span className="text-xs text-text-muted/50">
-                Hackathon 2026
-              </span>
-            </div>
-          </div>
-        </div>
-      </footer>
+    <div className="relative min-h-screen bg-black">
+      {children}
     </div>
-  );
-}
-
-function NavLink({ icon, label, active = false }: { icon: ReactNode; label: string; active?: boolean }) {
-  return (
-    <button
-      className={`
-        flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200
-        ${active
-          ? 'text-text-primary bg-space-surface/60'
-          : 'text-text-secondary hover:text-text-primary hover:bg-space-surface/30'
-        }
-      `}
-    >
-      {icon}
-      {label}
-    </button>
-  );
-}
-
-function MobileNavLink({ icon, label, active = false }: { icon: ReactNode; label: string; active?: boolean }) {
-  return (
-    <button
-      className={`
-        flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200
-        ${active
-          ? 'text-text-primary bg-space-surface/60'
-          : 'text-text-secondary hover:text-text-primary hover:bg-space-surface/30'
-        }
-      `}
-    >
-      {icon}
-      {label}
-    </button>
   );
 }
