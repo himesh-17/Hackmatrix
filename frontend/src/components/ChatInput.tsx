@@ -1,6 +1,6 @@
 import { useRef, useEffect, type KeyboardEvent } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowUp, Loader2, Mic, Flame, MessageSquare } from 'lucide-react';
+import { ArrowUp, Loader2, Flame, MessageSquare } from 'lucide-react';
 import { useSearchMode } from '@/context/SearchModeContext';
 
 export default function ChatInput({
@@ -65,7 +65,7 @@ export default function ChatInput({
 
         {/* Inner Bottom Controls Bar */}
         <div className="absolute bottom-3 left-4 right-4 flex items-center justify-between pointer-events-none">
-          {/* Left: Mode Indicator (NO + button) */}
+          {/* Left: Mode Indicator */}
           <div className="flex items-center gap-2 pointer-events-auto">
             <span className="inline-flex items-center gap-1.5 text-[11px] font-mono text-white/50">
               {isResearch ? (
@@ -82,16 +82,8 @@ export default function ChatInput({
             </span>
           </div>
 
-          {/* Right: Mic Icon + Solid Orange Square Submit Button (matching Mockup) */}
+          {/* Right: Solid Orange Square Submit Button (matching Mockup) */}
           <div className="flex items-center gap-3 pointer-events-auto">
-            <button
-              type="button"
-              className="text-white/40 hover:text-white/80 transition-colors p-1"
-              title="Voice Input"
-            >
-              <Mic className="w-4 h-4" />
-            </button>
-
             <motion.button
               whileHover={canSubmit ? { scale: 1.05 } : undefined}
               whileTap={canSubmit ? { scale: 0.95 } : undefined}
