@@ -51,7 +51,7 @@ Answer:""",
 def load_documents() -> list[Document]:
     with open(DATA_FILE) as f:
         raw = json.load(f)
-    return [Document(page_content=d["text"], metadata=d["metadata"]) for d in raw]
+    return [Document(page_content=f"OSD-ID: {d['osd_id']}\n{d['text']}", metadata=d["metadata"]) for d in raw]
 
 
 def chunk_documents(docs: list[Document]) -> list[Document]:
@@ -75,7 +75,7 @@ def build_vectorstore(chunks: list[Document]) -> Chroma:
 
 def create_qa_chain(vectorstore: Chroma, mode: str = "research"):
     llm = ChatGroq(model="llama-3.1-8b-instant", temperature=0.1)
-    retriever = vectorstore.as_retriever(search_kwargs={"k": 6})
+    retriever = vectorstore.as_retriever(search_kwargs={"k": 10})
     prompt = PROMPTS.get(mode, PROMPTS["research"])
     return RetrievalQA.from_chain_type(
         llm=llm, retriever=retriever, return_source_documents=True,
@@ -92,9 +92,16 @@ def setup_pipeline():
 
 def ask(qa_chain, question: str) -> dict:
     result = qa_chain.invoke(question)
-    sources = [
-        {"osd_id": d.metadata.get("osd_id"), "url": d.metadata.get("url"),
-         "snippet": d.page_content[:200]}
-        for d in result["source_documents"]
-    ]
+    # Deduplicate sources by OSD-ID
+    seen = set()
+    sources = []
+    for d in result["source_documents"]:
+        osd_id = d.metadata.get("osd_id")
+        if osd_id not in seen:
+            seen.add(osd_id)
+            sources.append({
+                "osd_id": osd_id,
+                "url": d.metadata.get("url"),
+                "snippet": d.page_content[:200]
+            })
     return {"answer": result["result"], "sources": sources}
