@@ -45,8 +45,8 @@ export default function ChatInput({
       transition={{ duration: 0.4 }}
       className="w-full"
     >
-      {/* Rectangular Box with Subtle Border Outline */}
-      <div className="relative rounded-xl border border-white/15 bg-black p-4 shadow-[0_0_30px_rgba(0,0,0,0.9)] transition-all duration-300 group focus-within:border-amber-500/40 focus-within:shadow-[0_0_20px_rgba(249,115,22,0.15)]">
+      {/* Rectangular Box with Soft Light Orange Border Outline */}
+      <div className="relative rounded-xl border border-[#f97316]/35 bg-black p-4 shadow-[0_0_30px_rgba(0,0,0,0.9)] transition-all duration-300 group focus-within:border-[#f97316]/60 focus-within:shadow-[0_0_15px_rgba(249,115,22,0.2)]">
         <textarea
           ref={textareaRef}
           value={query}
@@ -70,8 +70,8 @@ export default function ChatInput({
             <span className="inline-flex items-center gap-1.5 text-[11px] font-mono text-white/50">
               {isResearch ? (
                 <>
-                  <Flame className="w-3.5 h-3.5 text-amber-400" />
-                  <span className="text-amber-300/90 font-medium">Research Mode</span>
+                  <Flame className="w-3.5 h-3.5 text-[#f97316]" />
+                  <span className="text-[#f97316]/90 font-medium">Research Mode</span>
                 </>
               ) : (
                 <>
@@ -82,7 +82,7 @@ export default function ChatInput({
             </span>
           </div>
 
-          {/* Right: Solid Button */}
+          {/* Right: Solid Orange Square Submit Button */}
           <div className="flex items-center gap-3 pointer-events-auto">
             <motion.button
               whileHover={canSubmit ? { scale: 1.05 } : undefined}
@@ -94,13 +94,13 @@ export default function ChatInput({
                 flex items-center justify-center w-8 h-8 rounded-lg font-bold transition-all duration-300
                 ${
                   canSubmit
-                    ? 'bg-amber-500 text-black hover:bg-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.4)] cursor-pointer'
+                    ? 'bg-[#f97316] text-white hover:bg-orange-500 shadow-[0_0_12px_rgba(249,115,22,0.5)] cursor-pointer'
                     : 'bg-white/10 text-white/30 cursor-not-allowed'
                 }
               `}
             >
               {isLoading ? (
-                <Loader2 className="w-4 h-4 animate-spin text-black" />
+                <Loader2 className="w-4 h-4 animate-spin text-white" />
               ) : (
                 <ArrowUp className="w-4 h-4 stroke-[2.5]" />
               )}

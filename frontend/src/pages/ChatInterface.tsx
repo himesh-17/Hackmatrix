@@ -4,7 +4,7 @@ import ChatInput from '@/components/ChatInput';
 import AnswerDisplay from '@/components/AnswerDisplay';
 import { useResearchQuery } from '@/hooks/useResearchQuery';
 import { useSearchMode, type SearchMode } from '@/context/SearchModeContext';
-import { ChevronDown, Check, Flame, MessageSquare } from 'lucide-react';
+import { ChevronDown, Check, Flame, MessageSquare, Bot } from 'lucide-react';
 
 interface ChatInterfaceProps {
   onSearch?: (query: string) => void;
@@ -58,19 +58,19 @@ export default function ChatInterface({ onSearch }: ChatInterfaceProps) {
     <div className="flex flex-col h-full bg-black relative overflow-hidden font-sans">
       {/* Background Subtle Warm Ambient Glow */}
       <div className="absolute inset-0 pointer-events-none z-0">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[550px] bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-amber-600/10 via-black to-transparent blur-3xl opacity-60" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[950px] h-[550px] bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-amber-600/10 via-black to-transparent blur-3xl opacity-60" />
       </div>
 
       {/* Floating Top Header Toolbar */}
-      <div className="relative z-20 flex items-center justify-between px-6 py-3 border-b border-white/10 bg-black/90 backdrop-blur-xl">
+      <div className="relative z-20 flex items-center justify-between px-6 py-3 border-b border-[#f97316]/30 bg-black/90 backdrop-blur-xl">
         {/* Left: Interactive Dropdown Mode Selector */}
         <div className="relative" ref={dropdownRef}>
           <button
             onClick={() => setDropdownOpen(!dropdownOpen)}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-white/15 bg-white/5 text-white text-xs font-mono font-medium hover:bg-white/10 hover:border-amber-500/30 transition-all cursor-pointer"
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-[#f97316]/35 bg-black text-white text-xs font-mono font-medium hover:border-[#f97316]/60 transition-all cursor-pointer"
           >
             <span>{mode === 'research' ? 'Research Mode 2.5' : 'Casual Mode'}</span>
-            <ChevronDown className={`w-3.5 h-3.5 text-amber-400/80 transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} />
+            <ChevronDown className={`w-3.5 h-3.5 text-[#f97316] transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} />
           </button>
 
           {/* Mode Dropdown Menu */}
@@ -81,19 +81,19 @@ export default function ChatInterface({ onSearch }: ChatInterfaceProps) {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -5 }}
                 transition={{ duration: 0.15 }}
-                className="absolute top-full left-0 mt-1.5 w-52 rounded-xl border border-white/15 bg-black shadow-[0_0_30px_rgba(0,0,0,0.9)] p-1.5 z-50 backdrop-blur-2xl"
+                className="absolute top-full left-0 mt-1.5 w-52 rounded-xl border border-[#f97316]/35 bg-black shadow-[0_0_25px_rgba(0,0,0,0.9)] p-1.5 z-50 backdrop-blur-2xl"
               >
                 <button
                   onClick={() => handleSelectMode('research')}
                   className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-mono transition-colors text-left ${
-                    mode === 'research' ? 'bg-amber-500/15 text-amber-400 font-semibold' : 'text-white/80 hover:bg-white/5'
+                    mode === 'research' ? 'bg-[#f97316]/15 text-[#f97316] font-semibold' : 'text-white/80 hover:bg-white/5'
                   }`}
                 >
                   <div className="flex items-center gap-2">
-                    <Flame className="w-3.5 h-3.5 text-amber-400" />
+                    <Flame className="w-3.5 h-3.5 text-[#f97316]" />
                     <span>Research Mode 2.5</span>
                   </div>
-                  {mode === 'research' && <Check className="w-3.5 h-3.5 text-amber-400" />}
+                  {mode === 'research' && <Check className="w-3.5 h-3.5 text-[#f97316]" />}
                 </button>
 
                 <button
@@ -117,9 +117,9 @@ export default function ChatInterface({ onSearch }: ChatInterfaceProps) {
         <div />
       </div>
 
-      {/* Main Chat Stream Container */}
+      {/* Main Chat Stream Container (Claude 3.5 Pattern: Spacious max-w-4xl) */}
       <div ref={scrollContainerRef} className="flex-1 overflow-y-auto scroll-smooth pb-44 pt-8 relative z-10 w-full">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 w-full flex flex-col gap-8">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 w-full flex flex-col gap-6">
           <AnimatePresence mode="wait">
             {!hasInteracted ? (
               <motion.div
@@ -129,7 +129,7 @@ export default function ChatInterface({ onSearch }: ChatInterfaceProps) {
                 exit={{ opacity: 0, y: -15, transition: { duration: 0.2 } }}
                 className="flex flex-col items-center justify-center min-h-[45vh] text-center mt-16"
               >
-                {/* Center Header: Clean title only, no predefined query subtitle */}
+                {/* Center Header */}
                 <h2 className="text-3xl sm:text-4xl font-bold font-mono text-white tracking-tight">
                   How can I help you today?
                 </h2>
@@ -141,20 +141,24 @@ export default function ChatInterface({ onSearch }: ChatInterfaceProps) {
                 animate={{ opacity: 1 }}
                 className="flex flex-col gap-8 w-full pb-8"
               >
-                {/* Render Multi-Turn Message Thread */}
+                {/* Render Multi-Turn Message Thread (Exact Claude 3.5 pattern) */}
                 {messages.map((msg) => (
                   <div key={msg.id} className="w-full space-y-4">
                     {msg.role === 'user' ? (
-                      /* User Message Bubble: Sleek Dark Glass, no heavy orange */
-                      <div className="flex justify-end">
-                        <div className="max-w-[85%] bg-white/[0.08] border border-white/15 px-5 py-3.5 rounded-2xl rounded-tr-sm text-white text-[15px] leading-relaxed shadow-lg font-sans">
-                          {msg.content}
+                      /* User Question (Claude Right Aligned Pill) */
+                      <div className="flex justify-end w-full">
+                        <div className="max-w-[75%] bg-[#1a120b] border border-[#f97316]/30 px-4 py-2.5 rounded-2xl rounded-tr-sm text-white text-[13.5px] leading-relaxed shadow-sm font-sans">
+                          <div className="text-white/90 leading-relaxed font-normal">{msg.content}</div>
+                          <div className="text-[10px] text-amber-400/50 text-right mt-1 font-mono">{msg.timestamp || 'Just now'}</div>
                         </div>
                       </div>
                     ) : (
-                      /* Assistant Response Block */
-                      <div className="flex justify-start w-full">
-                        <div className="max-w-[100%] w-full bg-black/95 rounded-2xl p-6 border border-white/10 shadow-[0_0_30px_rgba(0,0,0,0.95)] backdrop-blur-xl relative">
+                      /* Assistant Reply (Claude Left Aligned Stream starting with Avatar) */
+                      <div className="flex justify-start items-start gap-3.5 w-full">
+                        <div className="w-7 h-7 rounded-full bg-[#f97316]/15 border border-[#f97316]/40 flex items-center justify-center flex-shrink-0 mt-0.5 shadow-sm">
+                          <Bot className="w-3.5 h-3.5 text-[#f97316]" />
+                        </div>
+                        <div className="flex-1 min-w-0 pt-0.5 text-left">
                           <AnswerDisplay
                             status={msg.status}
                             result={msg.result || null}
@@ -175,7 +179,7 @@ export default function ChatInterface({ onSearch }: ChatInterfaceProps) {
         </div>
       </div>
 
-      {/* Pinned Input Bar at Bottom */}
+      {/* Pinned Input Bar at Bottom (Centered max-w-3xl) */}
       <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black via-black/95 to-transparent pt-14 pb-6 px-4 sm:px-6 z-20">
         <div className="max-w-3xl mx-auto w-full">
           <ChatInput
