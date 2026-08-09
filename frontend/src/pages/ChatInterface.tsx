@@ -61,19 +61,19 @@ export default function ChatInterface({ onSearch }: ChatInterfaceProps) {
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[550px] bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-orange-600/15 via-black to-transparent blur-3xl opacity-70" />
       </div>
 
-      {/* Floating Top Header Toolbar */}
-      <div className="relative z-20 flex items-center justify-between px-6 py-3 border-b border-white/10 bg-black/90 backdrop-blur-xl">
-        {/* Left: Interactive Dropdown Mode Selector (Research Mode / Casual Mode) */}
+      {/* Floating Top Header Toolbar with Orange Border Line */}
+      <div className="relative z-20 flex items-center justify-between px-6 py-3 border-b border-[#f97316]/50 bg-black/90 backdrop-blur-xl shadow-[0_4px_20px_rgba(0,0,0,0.9)]">
+        {/* Left: Interactive Dropdown Mode Selector with Orange Border */}
         <div className="relative" ref={dropdownRef}>
           <button
             onClick={() => setDropdownOpen(!dropdownOpen)}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-white/15 bg-white/5 text-white text-xs font-mono font-semibold hover:bg-white/10 transition-all cursor-pointer"
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-[#f97316]/60 bg-black text-white text-xs font-mono font-semibold hover:border-[#f97316] hover:shadow-[0_0_15px_rgba(249,115,22,0.3)] transition-all cursor-pointer"
           >
             <span>{mode === 'research' ? 'Research Mode 2.5' : 'Casual Mode'}</span>
-            <ChevronDown className={`w-3.5 h-3.5 text-white/60 transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} />
+            <ChevronDown className={`w-3.5 h-3.5 text-[#f97316] transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} />
           </button>
 
-          {/* Mode Dropdown Menu */}
+          {/* Mode Dropdown Menu with Orange Border */}
           <AnimatePresence>
             {dropdownOpen && (
               <motion.div
@@ -81,7 +81,7 @@ export default function ChatInterface({ onSearch }: ChatInterfaceProps) {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -5 }}
                 transition={{ duration: 0.15 }}
-                className="absolute top-full left-0 mt-1.5 w-52 rounded-xl border border-white/15 bg-black/95 shadow-[0_0_30px_rgba(0,0,0,0.9)] p-1.5 z-50 backdrop-blur-2xl"
+                className="absolute top-full left-0 mt-1.5 w-52 rounded-xl border border-[#f97316]/60 bg-black shadow-[0_0_30px_rgba(249,115,22,0.25)] p-1.5 z-50 backdrop-blur-2xl"
               >
                 <button
                   onClick={() => handleSelectMode('research')}
@@ -113,10 +113,7 @@ export default function ChatInterface({ onSearch }: ChatInterfaceProps) {
           </AnimatePresence>
         </div>
 
-        {/* Center: Symbol Removed per user request ("beech wala symbol hatana hai") */}
         <div />
-
-        {/* Right: Toggle Pill Removed from top right ("right top se hatana na wahi cheez") */}
         <div />
       </div>
 
@@ -132,7 +129,7 @@ export default function ChatInterface({ onSearch }: ChatInterfaceProps) {
                 exit={{ opacity: 0, y: -15, transition: { duration: 0.2 } }}
                 className="flex flex-col items-center justify-center min-h-[50vh] text-center mt-12"
               >
-                {/* Center Header (Matching exact screenshot: "How can I help you today?") */}
+                {/* Center Header */}
                 <h2 className="text-3xl sm:text-4xl font-bold font-mono text-white mb-2 tracking-tight">
                   How can I help you today?
                 </h2>
@@ -151,16 +148,16 @@ export default function ChatInterface({ onSearch }: ChatInterfaceProps) {
                 {messages.map((msg) => (
                   <div key={msg.id} className="w-full space-y-4">
                     {msg.role === 'user' ? (
-                      /* User Message Bubble */
+                      /* User Message Bubble with Orange Border */
                       <div className="flex justify-end">
-                        <div className="max-w-[85%] bg-[#1a0f08] border border-[#f97316]/40 px-5 py-3.5 rounded-2xl rounded-tr-sm text-white text-[15px] leading-relaxed shadow-[0_0_20px_rgba(0,0,0,0.8)] font-sans">
+                        <div className="max-w-[85%] bg-[#1a0f08] border border-[#f97316]/60 px-5 py-3.5 rounded-2xl rounded-tr-sm text-white text-[15px] leading-relaxed shadow-[0_0_20px_rgba(249,115,22,0.2)] font-sans">
                           {msg.content}
                         </div>
                       </div>
                     ) : (
-                      /* Assistant Response Block */
+                      /* Assistant Response Block with Orange Border */
                       <div className="flex justify-start w-full">
-                        <div className="max-w-[100%] w-full bg-black/95 rounded-2xl p-6 border border-orange-500/20 shadow-[0_0_40px_rgba(0,0,0,0.95)] backdrop-blur-xl relative">
+                        <div className="max-w-[100%] w-full bg-black/95 rounded-2xl p-6 border border-[#f97316]/40 shadow-[0_0_40px_rgba(0,0,0,0.95)] backdrop-blur-xl relative">
                           <AnswerDisplay
                             status={msg.status}
                             result={msg.result || null}
