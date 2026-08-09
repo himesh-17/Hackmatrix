@@ -2,40 +2,57 @@ import requests
 import json
 import os
 
-OSDR_BASE = "https://osdr.nasa.gov/osdr/api/v2"
-DATASETS = ["OSD-104", "OSD-105", "OSD-379"]
+OSDR_BASE = "https://visualization.osdr.nasa.gov/biodata/api/v2"
+DATASETS = ["OSD-104", "OSD-105", "OSD-379", "OSD-48", "OSD-599", "OSD-326"]
 
 
 def fetch_dataset(osd_id: str) -> dict:
     url = f"{OSDR_BASE}/dataset/{osd_id}/"
     resp = requests.get(url, timeout=30)
     resp.raise_for_status()
-    return resp.json()
+    raw = resp.json()
+    return raw.get(osd_id, raw)
 
 
 def extract_text(data: dict) -> str:
+    meta = data.get("metadata", data)
     parts = []
-    for key in ["title", "description", "summary", "disease", "organism", "tissue"]:
-        val = data.get(key)
-        if val and isinstance(val, str):
-            parts.append(f"{key}: {val}")
-        elif val and isinstance(val, dict):
-            parts.append(f"{key}: {val.get('name', str(val))}")
 
-    for study in data.get("studies", []):
-        if isinstance(study, dict):
-            for key in ["title", "description", "summary"]:
-                val = study.get(key)
-                if val and isinstance(val, str):
-                    parts.append(f"study_{key}: {val}")
+    # Key metadata fields (space-separated keys)
+    field_map = {
+        "title": ["study title", "project title"],
+        "description": ["study description"],
+        "organism": ["organism"],
+        "material_type": ["material type"],
+        "assay_type": ["study assay technology type"],
+        "mission": ["mission", "flight program"],
+        "factor_name": ["study factor name"],
+        "factor_value": ["factor value"],
+    }
 
-    assays = data.get("assayTypes", [])
-    if assays:
-        parts.append(f"assay_types: {', '.join(str(a) for a in assays)}")
+    for label, keys in field_map.items():
+        for key in keys:
+            val = meta.get(key)
+            if val:
+                if isinstance(val, list):
+                    val = "; ".join(str(v) for v in val)
+                parts.append(f"{label}: {val}")
 
-    for f in data.get("factorValues", [])[:10]:
-        if isinstance(f, dict):
-            parts.append(f"factor: {f.get('name', '')} = {f.get('value', '')}")
+    # Characteristics
+    chars = meta.get("characteristics", [])
+    if isinstance(chars, list):
+        for c in chars[:10]:
+            if isinstance(c, dict):
+                parts.append(f"characteristic: {c.get('category', '')} = {c.get('text', '')}")
+            elif isinstance(c, str):
+                parts.append(f"characteristic: {c}")
+
+    # Factor values
+    factors = meta.get("factor value", [])
+    if isinstance(factors, list):
+        for f in factors[:10]:
+            if isinstance(f, dict):
+                parts.append(f"factor_value: {f.get('category', '')} = {f.get('text', '')}")
 
     return "\n".join(parts)
 

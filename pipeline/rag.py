@@ -1,12 +1,12 @@
 import os
 import json
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.schema import Document
-from langchain_community.vectorstores import Chroma
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain_core.documents import Document
+from langchain_chroma import Chroma
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from langchain_groq import ChatGroq
-from langchain.chains import RetrievalQA
-from langchain.prompts import PromptTemplate
+from langchain_classic.chains import RetrievalQA
+from langchain_core.prompts import PromptTemplate
 
 CHROMA_DIR = "chroma_db"
 DATA_FILE = "data/osdr_documents.json"
@@ -35,14 +35,14 @@ def chunk_documents(docs: list[Document]) -> list[Document]:
 
 
 def build_vectorstore(chunks: list[Document]) -> Chroma:
-    embeddings = GoogleGenerativeAIEmbeddings(model="models/text-embedding-004")
+    embeddings = GoogleGenerativeAIEmbeddings(model="models/gemini-embedding-001")
     if os.path.exists(CHROMA_DIR) and os.listdir(CHROMA_DIR):
         return Chroma(persist_directory=CHROMA_DIR, embedding_function=embeddings)
     return Chroma.from_documents(chunks, embeddings, persist_directory=CHROMA_DIR)
 
 
 def create_qa_chain(vectorstore: Chroma):
-    llm = ChatGroq(model="llama3-8b-8192", temperature=0.1)
+    llm = ChatGroq(model="llama-3.1-8b-instant", temperature=0.1)
     retriever = vectorstore.as_retriever(search_kwargs={"k": 4})
     prompt = PromptTemplate(template=PROMPT, input_variables=["context", "question"])
     return RetrievalQA.from_chain_type(
